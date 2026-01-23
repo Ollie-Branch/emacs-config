@@ -171,7 +171,7 @@ by checking and enabling it myself if it's not enabled."
 
 ;; INSTALL NEW PACKAGES AND CONFIG THEM
 (use-package-ensure! rainbow-delimiters
-  :hook (prog-mode . rainbow-delimiters-mode))
+  :hook (prog-mode-hook . rainbow-delimiters-mode))
 (use-package-ensure! magit
   :custom
   (magit-display-buffer-function #'magit-display-buffer-same-window-except-diff-v1))
