@@ -62,12 +62,14 @@ by checking and enabling it myself if it's not enabled."
 
 ;; Variables common to mobile and desktop
 (defun set-common-vars ()
+  (progn
     (setq use-short-answers t
 	  visible-bell t
 	  history-length 25
 	  global-auto-revert-non-file-buffers t
 	  custom-safe-themes t
-	  inhibit-startup-message t))
+	  inhibit-startup-message t)
+    (setq-default fill-column 80)))
 
 ;; Modes and functions common to mobile and desktop
 (defun setup-common-modes-functions ()
@@ -84,8 +86,7 @@ by checking and enabling it myself if it's not enabled."
     (add-hook 'prog-mode-hook 'global-display-fill-column-indicator-mode)
     (fido-vertical-mode 1)
     (recentf-mode 1)
-    (init-modus-vivendi)
-    (set-fill-column 80)))
+    (init-modus-vivendi)))
 
 (defun desktop-initial-setup ()
   (progn
