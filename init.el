@@ -146,23 +146,13 @@ by checking and enabling it myself if it's not enabled."
   (setq agnostic-home-dir "~"))
 
 ;; CONFIG OF PRE-INSTALLED EMACS PACKAGES
-;; I DON'T KNOW WHY THIS `use-package' BLOCK DOESN'T WORK
-;; (use-package org
-;;   :config (
-;; 	   (setq diary-file
-;; 		 (concat agnostic-home-dir "/Documents/org/diary.org"))
-;; 	   (setq org-directory
-;; 		 (concat agnostic-home-dir "/Documents/org/"))
-;; 	   (setq org-agenda-files
-;; 		 (directory-files-recursively
-;; 		  (concat agnostic-home-dir "/Documents/org/") "\\.org$"))
-;; 	   (setq org-agenda-start-with-log-mode t)
-;; 	   (setq org-log-done 'time)
-;; 	   (setq org-log-into-drawer t)
-;; 	   (setq org-refile-targets
-;; 		 `(("Archive.org" :maxlevel . 1)))
-;; 	   (advice-add 'org-refile :after 'org-save-all-org-buffers)))
-
+;; org config (wrapping this in a use-package block didn't work for some reason
+;; so I'm using this expression to configure org.
+;; IDEA: Make a macro to automagically concat the platform-specific home with
+;;       the user-given directory when the macro spots a `~' character in the
+;;       input-string. I mostly want to do this to reduce code width and make
+;;       it so I don't have to think about the underlying implementation so
+;;       much.
 (when (require 'org nil 'noerror)
   (setq diary-file
 	(concat agnostic-home-dir "/Documents/org/diary.org"))
