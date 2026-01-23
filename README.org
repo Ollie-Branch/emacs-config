@@ -1,0 +1,2 @@
+* Emacs Config (to slowly replace my doom emacs config)
+I have made an emacs config that hopefully works on both android and desktop seamlessly. Mostly made this to help simplify from doom emacs. Maybe since I'm leaning heavier on packages native to emacs I can avoid the occasional issue where something would break in doom emacs, we'll see.
