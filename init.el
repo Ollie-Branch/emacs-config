@@ -34,7 +34,11 @@ which may not be the case. In an ideal world I'd allocate time to fixing this
 by checking and enabling it myself if it's not enabled."
   (declare (indent 1))
   (if (eq system-type 'android)
-      (list 'use-package name ':ensure 't plist)
+      (if (eq plist t)
+	  (progn
+	    (setq plist (append plist '(:ensure t)))
+	    (list 'use-package name plist))
+	(list 'use-package name ':ensure 't))
     (list 'use-package name ':straight 't plist)))
 
 ;; Configure modus-vivendi for both mobile and desktop, this code will have to
