@@ -19,6 +19,10 @@
 	   (load bootstrap-file nil 'nomessage))
 	 (straight-use-package 'use-package)))
 
+;; I hate that I had to use claude to figure out something so simple :sob:
+;; Apparently using setq to modify macro parameters can cause unintended 
+;; behavior (because it's a list of unevaluated forms not a normal variable,
+;; and using (if (eq plist t)) will not actually return t according to it.
 (defmacro use-package-ensure! (name &rest plist)
   " Declares and configures a package, while ensuring it's installed.
 This is a thin wrapper around `use-package', and exists so I can make sure
@@ -33,13 +37,12 @@ This code assumes you have already set (straight-use-package 'use-package),
 which may not be the case. In an ideal world I'd allocate time to fixing this
 by checking and enabling it myself if it's not enabled."
   (declare (indent 1))
-  (if (eq system-type 'android)
-      (if (eq plist t)
-	  (progn
-	    (setq plist (append plist '(:ensure t)))
-	    (list 'use-package name plist))
-	(list 'use-package name ':ensure 't))
-    (list 'use-package name ':straight 't plist)))
+   (let ((package-manager-key (if (eq system-type 'android) :ensure :straight)))
+    (if plist
+        ;; If there are additional arguments, add the package manager key
+        `(use-package ,name ,package-manager-key t ,@plist)
+      ;; If no additional arguments, just use the package manager key
+      `(use-package ,name ,package-manager-key t))))
 
 ;; Configure modus-vivendi for both mobile and desktop, this code will have to
 ;; be changed when I install and configure autodark package
@@ -147,7 +150,7 @@ by checking and enabling it myself if it's not enabled."
 
 ;; CONFIG OF PRE-INSTALLED EMACS PACKAGES
 ;; org config (wrapping this in a use-package block didn't work for some reason
-;; so I'm using this expression to configure org.
+;; so I'm using this expression to configure org).
 ;; IDEA: Make a macro to automagically concat the platform-specific home with
 ;;       the user-given directory when the macro spots a `~' character in the
 ;;       input-string. I mostly want to do this to reduce code width and make
