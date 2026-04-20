@@ -213,6 +213,7 @@ by checking and enabling it myself if it's not enabled."
   (dashboard-icon-type 'nerd-icons)
   (dashboard-set-heading-icons t)
   (dashboard-set-file-icons t)
+  (dashboard-startup-banner (cons "~/.config/emacs/splash/emacs-logo.png" "~/.config/emacs/splash/emacs-logo.txt"))
   :config (dashboard-setup-startup-hook))
 (use-package-ensure! doom-modeline
   :custom (doom-modeline-height 24)

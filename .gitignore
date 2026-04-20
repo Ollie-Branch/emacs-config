@@ -7,3 +7,5 @@ recentf
 straight/
 auto-save-list/
 \#init.el\#
+transient
+projectile-bookmarks.eld
