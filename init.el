@@ -75,7 +75,9 @@ by checking and enabling it myself if it's not enabled."
 	  history-length 25
 	  global-auto-revert-non-file-buffers t
 	  custom-safe-themes t
-	  inhibit-startup-message t)
+	  inhibit-startup-message t
+	  evil-want-keybinding nil
+	  initial-buffer-choice 'dashboard-open)
     (setq-default fill-column 80)))
 
 ;; Modes and functions common to mobile and desktop
@@ -104,6 +106,7 @@ by checking and enabling it myself if it's not enabled."
     (menu-bar-mode -1)
     (tool-bar-mode -1)
     (scroll-bar-mode -1)
+    (set-frame-font "FantasqueSansM Nerd Font Mono-12" nil t)
     (bootstrap-straight)))
 
 (defun mobile-initial-setup ()
@@ -173,20 +176,72 @@ by checking and enabling it myself if it's not enabled."
 		 
 
 ;; INSTALL NEW PACKAGES AND CONFIG THEM
+;; Start with packages that work on both android and desktop then move to desktop only packages
 (use-package-ensure! rainbow-delimiters
   :hook (prog-mode-hook . rainbow-delimiters-mode))
-(use-package-ensure! magit
-  :custom
-  (magit-display-buffer-function #'magit-display-buffer-same-window-except-diff-v1))
+;; Emacs, now more self-documenting
 (use-package-ensure! helpful
   :bind (("C-h f" . helpful-callable)
 	 ("C-h v" . helpful-variable)
  	 ("C-h k" . helpful-key)
  	 ("C-h x" . helpful-command)
  	 ("C-h C-d" . helpful-at-point)))
+;; configure dependency for doom-modeline
+(use-package-ensure! nerd-icons
+  :custom
+  (doom-modeline-spc-face-overrides
+   (list :family (face-attribute 'fixed-pitch :family)))
+  (doom-modeline-icon t)
+  (nerd-icons-scale-factor 1.0)
+  (doom-modeline-enable-buffer-position nil)
+  (doom-modeline-time t)
+  (nerd-icons-font-family "Symbols Nerd Font Mono"))
+;; popup window for autocompletions
+(use-package-ensure! corfu
+  :custom
+  (corfu-auto t)
+  (corfu-auto-delay 0.2)
+  :init (global-corfu-mode))
+;; Would probably rather use project.el but dashboard only supportes projectile afaik
+(use-package-ensure! projectile
+  :config
+  (projectile-mode 1)
+  (define-key projectile-mode-map (kbd "C-c p") 'projectile-command-map))
+(use-package-ensure! dashboard
+  :custom
+  (dashboard-display-icons-p t)
+  (dashboard-icon-type 'nerd-icons)
+  (dashboard-set-heading-icons t)
+  (dashboard-set-file-icons t)
+  :config (dashboard-setup-startup-hook))
 (use-package-ensure! doom-modeline
+  :custom (doom-modeline-height 24)
   :config (doom-modeline-mode 1))
+(use-package-ensure! evil
+  :config (evil-mode 1))
+(use-package-ensure! evil-collection
+  :config (evil-collection-init))
+(use-package-ensure! markdown-mode
+  :mode ("README\\.md\\'" . gfm-mode)
+  :custom (markdown-command "multimarkdown")
+  :bind (:map markdown-mode-map
+         ("C-c C-e" . markdown-do)))
+;; Desktop-only Packages
+(when (not (eq system-type 'android))
+  ;; Using git on android emacs isn't really practical, and I don't know how to do it.
+  (use-package-ensure! magit
+    :custom
+    (magit-display-buffer-function #'magit-display-buffer-same-window-except-diff-v1))
+  ;; Android has pdf viewers that will work better on that platform.
+  (use-package-ensure! pdf-tools
+    :magic ("%PDF" . pdf-view-mode)
+    :config (pdf-tools-install :no-query)))
 
 ;; BINDINGS
 ;; Access a fancier buffer list
 (global-set-key (kbd "C-x C-b") 'ibuffer)
+;; Window movement
+(global-set-key (kbd "C-c w l") 'windmove-right)
+(global-set-key (kbd "C-c w k") 'windmove-up)
+(global-set-key (kbd "C-c w j") 'windmove-down)
+(global-set-key (kbd "C-c w h") 'windmove-left)
