@@ -7,6 +7,8 @@ recentf
 straight/
 auto-save-list/
 \#init.el\#
+projects/
+projects
 backups/
 transient/
 etc/
