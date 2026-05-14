@@ -270,7 +270,7 @@ control flow"
   (vertico-mode))
 
 ;; example configuration for consult
-(use-package consult
+(use-package-ensure! consult
   ;; replace bindings. lazily loaded by `use-package'.
   :bind (;; c-c bindings in `mode-specific-map'
          ("C-c M-x" . consult-mode-command)
@@ -387,7 +387,7 @@ control flow"
 (use-package-ensure! hl-todo
   :config (global-hl-todo-mode))
 
-;; ;; editing ergonomics
+;; editing ergonomics
 (use-package-ensure! evil
   :config
   (evil-mode 1)
@@ -397,8 +397,8 @@ control flow"
 (use-package-ensure! evil-collection
   :config (evil-collection-init))
 
-;; ;; would probably rather use project.el but dashboard only supports projectile
-;; ;; afaik
+;; would probably rather use project.el but dashboard only supports projectile
+;; afaik
 (use-package-ensure! projectile
   :config
   (projectile-mode 1)
@@ -410,8 +410,7 @@ control flow"
   :hook
   ((prog-mode text-mode markdown-mode org-mode) . smartparens-mode))
 
-;; ;; eye-candy
-
+;; eye-candy
 ;; org-mode prettification
 (use-package-ensure! org-superstar
   :custom
@@ -436,7 +435,8 @@ control flow"
 (use-package-ensure! org-fragtog
   :hook (org-mode . org-fragtog-mode))
 
-;; Centered editing
+;; Centered editing of org documents, when no other windows are
+;; visible
 (use-package-ensure! darkroom
   :hook (org-mode . darkroom-tentative-mode))
 
@@ -460,11 +460,16 @@ control flow"
            :fringe-width 8))
   (spacious-padding-mode 1))
 
-;; ;; configure dependency for doom-modeline
+;; configure dependency for doom-modeline
 (use-package-ensure! nerd-icons
   :custom
   (nerd-icons-scale-factor 0.75)
   (nerd-icons-font-family "Symbols Nerd Font Mono"))
+
+;; dependency for dashboard (and anything else that has page breaks)
+;; so we display them as clean lines
+(use-package-ensure! page-break-lines
+  :config (global-page-break-lines-mode))
 
 (use-package-ensure! dashboard
   :custom
@@ -480,6 +485,10 @@ control flow"
   (dashboard-icon-type 'nerd-icons)
   (dashboard-set-heading-icons t)
   (dashboard-set-file-icons t)
+  (dashboard-center-content t)
+  (dashboard-page-separator "\n\f\n")
+  (dashboard-image-banner-max-height 240)
+  (dashboard-projects-switch-function 'projectile-switch-project-by-name)
   (dashboard-startup-banner (cons "~/.config/emacs/splash/emacs-logo.png" "~/.config/emacs/splash/emacs-logo.txt"))
   :config (dashboard-setup-startup-hook))
 
@@ -493,17 +502,17 @@ control flow"
   (doom-modeline-icon t)
   :hook (spacious-padding-mode . doom-modeline-mode))
 
-;; ;; format specific major modes
+;; format specific major modes
 (use-package-ensure! markdown-mode
   :mode ("readme\\.md\\'" . gfm-mode)
   :custom (markdown-command "multimarkdown")
   :bind (:map markdown-mode-map
          ("C-c C-e" . markdown-do)))
 
-;; ;; desktop-only packages
-;; ;; using git on android emacs isn't really practical, and i don't know how to
-;; ;; do it with the android build of emacs. it would probably be possible through
-;; ;; termux though.
+;; desktop-only packages
+;; using git on android emacs isn't really practical, and i don't know how to
+;; do it with the android build of emacs. it would probably be possible through
+;; termux though.
 (use-package-desktop! magit
   :straight t
   :defer t
