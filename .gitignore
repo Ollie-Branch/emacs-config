@@ -1,11 +1,14 @@
+*~
 eln-cache/
 elpa/
 history
-init.el~
 places
 recentf
 straight/
 auto-save-list/
 \#init.el\#
-transient
+backups/
+transient/
+etc/
+var/
 projectile-bookmarks.eld
