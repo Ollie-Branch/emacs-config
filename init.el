@@ -511,7 +511,7 @@ control flow"
 
 ;; format specific major modes
 (use-package-ensure! markdown-mode
-  :mode ("readme\\.md\\'" . gfm-mode)
+  :mode ("README\\.md\\'" . gfm-mode)
   :custom (markdown-command "multimarkdown")
   :bind (:map markdown-mode-map
          ("C-c C-e" . markdown-do)))
