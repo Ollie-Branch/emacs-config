@@ -107,7 +107,10 @@ control flow"
   (repeat-mode 1)
   (dolist (mode '(org-mode-hook term-mode-hook eshell-mode-hook))
     (add-hook mode (lambda () (display-line-numbers-mode -1))))
-  (add-hook 'before-save-hook 'check-parens)
+  ;; some weirdness with org-mode's time tracking trips check-parens
+  ;; so I removed it. I would like to conditionally enable the hook,
+  ;; but that's for a later time.
+  ;; (add-hook 'before-save-hook 'check-parens)
   (add-hook 'prog-mode-hook 'display-fill-column-indicator-mode)
   (recentf-mode 1)
   (make-directory "~/.config/emacs/backups" t)
@@ -129,7 +132,7 @@ control flow"
 	(when (member "Source Sans Pro" (font-family-list))
 	  (set-face-attribute 'variable-pitch nil
 			      :family "Source Sans Pro"
-			      :height 180)))
+			      :height 120)))
     (progn
       (setq use-dialog-box t	     
 	    tool-bar-position 'bottom)
@@ -164,25 +167,18 @@ control flow"
   (org-adapt-indentation t)
   (org-hide-leading-stars t)
   (org-pretty-entities t)
+  (org-startup-indented t)
   (org-todo-keywords
-   '((sequence
-      "TODO" "PROJ" "READ" "CHECK" "IDEA" ; Needs further action
-      "|"
-      "DONE")))
-  (org-todo-keyword-faces
-   '(("TODO"      :inherit (org-todo region) :foreground "#A3BE8C" :weight bold)
-     ("PROJ"      :inherit (org-todo region) :foreground "#88C0D0" :weight bold)
-     ("READ"      :inherit (org-todo region) :foreground "#8FBCBB" :weight bold)
-     ("CHECK"     :inherit (org-todo region) :foreground "#81A1C1" :weight bold)
-     ("IDEA"      :inherit (org-todo region) :foreground "#EBCB8B" :weight bold)
-     ("DONE"      :inherit (org-todo region) :foreground "#30343d" :weight bold)))
+   '((sequence "TODO(t)" "|" "DONE(d)")
+     (sequence "PROJ(p)" "|" "DONE(d)" "CANCELLED(c)" "HIATUS(h)")
+     (sequence "READ(r)" "|" "DONE(d)")
+     (sequence "IDEA(i)")
+     (sequence "REPORTED(R)" "BUG(b)" "KNOWNCAUSE(k)" "|" "FIXED(d)")))
   (org-ellipsis " ·")
   (org-refile-targets
    `(("archive.org" :maxlevel . 1)))
   :config
   (advice-add 'org-refile :after 'org-save-all-org-buffers))
-
-(add-hook 'org-mode-hook 'org-indent-mode)
 
 (use-package-ensure! modus-themes
   :custom
@@ -395,6 +391,7 @@ control flow"
   (define-key evil-normal-state-map (kbd "k") 'evil-previous-visual-line))
 
 (use-package-ensure! evil-collection
+  :after (evil)
   :config (evil-collection-init))
 
 ;; would probably rather use project.el but dashboard only supports projectile
@@ -411,24 +408,6 @@ control flow"
   ((prog-mode text-mode markdown-mode org-mode) . smartparens-mode))
 
 ;; eye-candy
-;; org-mode prettification
-(use-package-ensure! org-superstar
-  :custom
-  (org-superstar-leading-bullet " ")
-  (org-superstar-special-todo-items t) ;; Makes TODO header bullets into boxes
-  (org-superstar-headline-bullets-list '("◉" "○" "⚬" "◈" "◇"))
-  (org-superstar-prettify-item-bullets nil)
-  (org-superstar-special-todo-items t)
-  (org-superstar-todo-bullet-alist '(("TODO" . 9744)
-                                          ("DONE" . 9744)
-                                          ("READ" . 9744)
-                                          ("IDEA" . 9744)
-                                          ("WAITING" . 9744)
-                                          ("CANCELLED" . 9744)
-                                          ("PROJECT" . 9744)
-                                          ("POSTPONED" . 9744)))
-  :hook (org-mode . org-superstar-mode))
-
 (use-package-ensure! org-appear
   :hook (org-mode . org-appear-mode))
 
@@ -437,19 +416,55 @@ control flow"
 
 ;; Centered editing of org documents, when no other windows are
 ;; visible
-(use-package-ensure! darkroom
+(use-package-desktop! darkroom
+  :straight t
   :hook (org-mode . darkroom-tentative-mode))
 
 (use-package-ensure! mixed-pitch
   :hook
   (org-mode . mixed-pitch-mode))
 
-;; (use-package-ensure! org-modern
-;;   :hook (org-mode . global-org-modern-mode))
+(use-package-ensure! org-modern
+  :custom
+  (org-modern-star 'replace)
+  (org-modern-todo-faces
+   '(("TODO"	   :foreground "#D16168" :weight bold :height 120)
+     ("PROJ"	   :foreground "#B4B4E4" :weight bold :height 120)
+     ("READ"	   :foreground "#A8C4DC" :weight bold :height 120)
+     ("IDEA"	   :foreground "#A8C4DC" :weight bold :height 120)
+     ("REPORTED"   :foreground "#D16168" :weight bold :height 120)
+     ("BUG"	   :foreground "#D16168" :weight bold :height 120)
+     ("KNOWNCAUSE" :foreground "#D16168" :weight bold :height 120)
+     ("FIXED"	   :foreground "#B5C5AA" :weight bold :height 120)
+     ("CANCELLED"  :foreground "#B4B4E4" :weight bold :height 120)
+     ("HIATUS"     :foreground "#B4B4E4" :weight bold :height 120)
+     ("DONE"	   :foreground "#B5C5AA" :weight bold :height 120)))
+  :hook
+  (org-mode . org-modern-mode)
+  (org-agenda-finalize . org-modern-agenda))
+
+(use-package-desktop! org-modern-indent
+  :straight
+  (org-modern-indent
+   :type git
+   :host github
+   :repo "jdtsmith/org-modern-indent")
+  :config (add-hook 'org-mode-hook #'org-modern-indent-mode 90))
+
+;; configure dependency for doom-modeline
+(use-package-ensure! nerd-icons
+  :custom
+  (nerd-icons-scale-factor 0.85)
+  (nerd-icons-font-family "Symbols Nerd Font Mono"))
+
+;; dependency for dashboard (and anything else that has page breaks)
+;; so we display them as clean lines
+(use-package-ensure! page-break-lines
+  :config (global-page-break-lines-mode))
 
 (use-package-ensure! spacious-padding
-  :config
-  (setq spacious-padding-widths
+  :custom
+  (spacious-padding-widths
         '( :internal-border-width 15
            :header-line-width 4
            :mode-line-width 6
@@ -458,18 +473,8 @@ control flow"
            :right-divider-width 30
            :scroll-bar-width 8
            :fringe-width 8))
+  :config
   (spacious-padding-mode 1))
-
-;; configure dependency for doom-modeline
-(use-package-ensure! nerd-icons
-  :custom
-  (nerd-icons-scale-factor 0.75)
-  (nerd-icons-font-family "Symbols Nerd Font Mono"))
-
-;; dependency for dashboard (and anything else that has page breaks)
-;; so we display them as clean lines
-(use-package-ensure! page-break-lines
-  :config (global-page-break-lines-mode))
 
 (use-package-ensure! dashboard
   :custom
@@ -498,9 +503,11 @@ control flow"
    (list :family (face-attribute 'fixed-pitch :family)))
   (doom-modeline-enable-buffer-position nil)
   (doom-modeline-time t)
-  (doom-modeline-height 24)
+  (doom-modeline-height 14)
   (doom-modeline-icon t)
-  :hook (spacious-padding-mode . doom-modeline-mode))
+  :config
+  (doom-modeline-mode 1))
+
 
 ;; format specific major modes
 (use-package-ensure! markdown-mode
@@ -510,9 +517,6 @@ control flow"
          ("C-c C-e" . markdown-do)))
 
 ;; desktop-only packages
-;; using git on android emacs isn't really practical, and i don't know how to
-;; do it with the android build of emacs. it would probably be possible through
-;; termux though.
 (use-package-desktop! magit
   :straight t
   :defer t
@@ -522,15 +526,14 @@ control flow"
 (use-package-desktop! dap-mode
   :straight t)
 
-;; ;; android has pdf viewers that work better on that platform.
+;; android has pdf viewers that work better on that platform.
 (use-package-desktop! pdf-tools
   :straight t
   :defer t
   :magic ("%pdf" . pdf-view-mode)
   :config (pdf-tools-install :no-query))
 
-;; Why is this going over max-eval-depth
-;; (use-package-desktop! dap-mode
-;;   :straight t)
+ (use-package-desktop! dap-mode
+   :straight t)
 
 (use-package-ensure! simple-httpd)
