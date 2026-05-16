@@ -60,7 +60,7 @@ it's not enabled."
       ;; if no additional arguments, just use the package manager key
       `(use-package ,name ,package-manager-key t))))
 
-(defmacro use-package-vanilla! (name &rest plist)
+(defmacro use-package-builtin! (name &rest plist)
   "Configures installed packages. This is a thin wrapper around
 `use-package', and exists so I can make sure that platforms that don't
 use `straight.el' can still configure pre-installed packages without
@@ -117,7 +117,7 @@ control flow"
   (setq agnostic-home-dir "~"))
 
 ;; configure emacs
-(use-package-vanilla! emacs
+(use-package-builtin! emacs
   :custom
   (use-short-answers t)
   (visible-bell t)
@@ -188,7 +188,7 @@ control flow"
    ("C-h k"   . describe-keymap)))
 
 ;; config of pre-installed emacs packages
-(use-package-vanilla! org
+(use-package-builtin! org
   :custom
   (diary-file
    (concat agnostic-home-dir "/Documents/org/diary.org"))
