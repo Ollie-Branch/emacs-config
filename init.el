@@ -267,7 +267,16 @@ control flow"
   (completion-category-overrides '((file
 				    (styles partial-completion))))
   (completion-category-defaults nil)
-  (completion-pcm-leading-wildcard t))
+  (completion-pcm-leading-wildcard t)
+  ;; You need this to get orderless to work with fido-vertical mode.
+  ;; Fido-vertical-mode is very greedy about setting up its own
+  ;; completion style.
+  :hook
+  (icomplete-minibuffer-setup . (lambda () (setq-local
+					    completion-styles
+					    '(orderless basic))))
+  ;; startup fido-vertical-mode after orderless is initialized
+  :config (fido-vertical-mode))
 
 ;; context windows with keyboard shortcuts
 (use-package-ensure! embark
@@ -299,19 +308,26 @@ control flow"
   (add-to-list 'display-buffer-alist
                '("\\`\\*embark collect \\(live\\|completions\\)\\*"
                  nil
-                 (window-parameters (mode-line-format . none)))))
+                 (window-parameters (mode-line-format . none))))
+  ;; set embark keymaps to use helpful
+  (keymap-set embark-symbol-map "h" #'helpful-symbol)
+  (keymap-set embark-become-help-map "v" #'helpful-variable)
+  (keymap-set embark-become-help-map "f" #'helpful-callable)
+  (keymap-set embark-become-help-map "s" #'helpful-symbol))
 
 ;; consult users will also want the embark-consult package.
 (use-package-ensure! embark-consult) ; only need to install it, embark loads it after consult if found
 
-(use-package-ensure! vertico
-  :custom
-  ;; (vertico-scroll-margin 0) ;; Different scroll margin
-  ;; (vertico-count 20) ;; Show more candidates
-  ;; (vertico-resize t) ;; Grow and shrink the Vertico minibuffer
-  (vertico-cycle t) ;; Enable cycling for `vertico-next/previous'
-  :init
-  (vertico-mode))
+;; will probably remove this package but I have commented it out for
+;; now to see how the workflow proceeds without it.
+;; (use-package-ensure! vertico
+;;   :custom
+;;   ;; (vertico-scroll-margin 0) ;; Different scroll margin
+;;   ;; (vertico-count 20) ;; Show more candidates
+;;   ;; (vertico-resize t) ;; Grow and shrink the Vertico minibuffer
+;;   (vertico-cycle t) ;; Enable cycling for `vertico-next/previous'
+;;   :init
+;;   (vertico-mode))
 
 ;; example configuration for consult
 (use-package-ensure! consult
