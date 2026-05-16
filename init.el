@@ -36,8 +36,9 @@
   (straight-use-package 'org))
 (setq evil-want-keybinding nil)
 
-;; functions & macros
+(profiler-start 'cpu+mem)
 
+;; functions & macros
 (defmacro use-package-ensure! (name &rest plist)
   "Declares and configures a package, while ensuring it's installed.
 this is a thin wrapper around `use-package', and exists so i can make
@@ -78,20 +79,6 @@ name is the name of the package, and the plist is the property list
       ;; if no additional arguments, just use the package manager key
       `(use-package ,name ,package-manager-key nil))))
 
-(defmacro use-package-desktop! (name &rest plist)
-  "declares desktop-exclusive packages, this is to save me the hassle of using
-control flow"
-  (declare (indent 1))
-  (if (not (eq system-type 'android))
-      `(use-package ,name ,@plist)))
-
-(defmacro use-package-mobile! (name &rest plist)
-  "declares mobile-exclusive packages, this is to save me the hassle of using
-control flow"
-  (declare (indent 1))
-  (if (eq system-type 'android)
-      `(use-package ,name ,@plist)))
-
 ;; some utility functions that are useful outside of config
 (defun read-lines-from-file (filepath)
   "return a list of lines of a file at filepath."
@@ -131,6 +118,8 @@ control flow"
   (enable-recursive-minibuffers t)
   (minibuffer-prompt-properties
    '(read-only t cursor-intangible t face minibuffer-prompt))
+  ;; Only run GC when memory usage exceeds or is equal to 60MiB
+  (gc-cons-threshold (* 1024 1024 60)) 
   :config
   (savehist-mode 1)
   (save-place-mode 1)
@@ -481,8 +470,8 @@ control flow"
 
 ;; Centered editing of org documents, when no other windows are
 ;; visible
-(use-package-desktop! darkroom
-  :straight t
+(use-package-ensure! darkroom
+  :if (not (eq system-type 'android))
   :hook (org-mode . darkroom-tentative-mode))
 
 (use-package-ensure! mixed-pitch
@@ -508,7 +497,8 @@ control flow"
   (org-mode . org-modern-mode)
   (org-agenda-finalize . org-modern-agenda))
 
-(use-package-desktop! org-modern-indent
+(use-package-ensure! org-modern-indent
+  :if (not (eq system-type 'android))
   :straight
   (org-modern-indent
    :type git
@@ -582,23 +572,24 @@ control flow"
          ("C-c C-e" . markdown-do)))
 
 ;; desktop-only packages
-(use-package-desktop! magit
-  :straight t
+(use-package-ensure! magit
+  :if (not (eq system-type 'android))
   :defer t
   :custom
   (magit-display-buffer-function #'magit-display-buffer-same-window-except-diff-v1))
 
-(use-package-desktop! dap-mode
-  :straight t)
-
 ;; android has pdf viewers that work better on that platform.
-(use-package-desktop! pdf-tools
-  :straight t
+(use-package-ensure! pdf-tools
+  :if (not (eq system-type 'android))
   :defer t
   :magic ("%pdf" . pdf-view-mode)
   :config (pdf-tools-install :no-query))
 
- (use-package-desktop! dap-mode
-   :straight t)
+ (use-package-ensure! dap-mode
+  :if (not (eq system-type 'android)))
 
-(use-package-ensure! simple-httpd)
+(use-package-ensure! simple-httpd
+  :if (not (eq system-type 'android)))
+
+(profiler-stop)
+(profiler-report)
