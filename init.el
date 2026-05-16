@@ -1,3 +1,16 @@
+;; TODO Use display-buffer-alist to increase the ergonomics of helpful
+;;   and info buffers
+;; TODO Use tab-line to group help buffers in a single window, and
+;;   tab-line to group the prog-mode buffers
+;; TODO Use tab-bar to implement an easy workspaces feature into emacs
+;; an article on the subject to look at later:
+;; https://www.masteringemacs.org/article/demystifying-emacs-window-manager
+
+;; I'd like to find a way to have prog-mode windows that are part of
+;; the same tab-bar to share tab-lines, but just make it so I can view
+;; code in a side-by-side fashion
+
+
 ;; BOOTSTRAPPING
 ;; straight.el bootstrap function
 (defun bootstrap-straight ()
@@ -25,18 +38,20 @@
 ;; functions & macros
 
 (defmacro use-package-ensure! (name &rest plist)
-  " declares and configures a package, while ensuring it's installed.
-this is a thin wrapper around `use-package', and exists so i can make sure
-that platforms that don't use `straight.el' can still install packages without
-control flow being embedded around every `use-package' call and creating a ton
-of copy-pasted code that's hard to maintain.
+  "Declares and configures a package, while ensuring it's installed.
+this is a thin wrapper around `use-package', and exists so i can make
+sure that platforms that don't use `straight.el' can still install
+packages without control flow being embedded around every
+`use-package' call and creating a ton of copy-pasted code that's hard
+to maintain.
 
 name is the name of the package, and the plist is the property list
 (:prelude (), :init (), :config (), :hook (), etc.)
 
-this code assumes you have already set (straight-use-package 'use-package),
-which may not be the case. in an ideal world i'd allocate time to fixing this
-by checking and enabling it myself if it's not enabled."
+this code assumes you have already set (straight-use-package
+'use-package), which may not be the case. in an ideal world i'd
+allocate time to fixing this by checking and enabling it myself if
+it's not enabled."
   (declare (indent 1))
    (let ((package-manager-key (if (eq system-type 'android) :ensure :straight)))
     (if plist
@@ -44,6 +59,23 @@ by checking and enabling it myself if it's not enabled."
         `(use-package ,name ,package-manager-key t ,@plist)
       ;; if no additional arguments, just use the package manager key
       `(use-package ,name ,package-manager-key t))))
+
+(defmacro use-package-vanilla! (name &rest plist)
+  "Configures installed packages. This is a thin wrapper around
+`use-package', and exists so I can make sure that platforms that don't
+use `straight.el' can still configure pre-installed packages without
+control flow being embedded around every `use-package' call and
+creating a ton of copy-pasted code that's hard to maintain.
+
+name is the name of the package, and the plist is the property list
+(:prelude (), :init (), :config (), :hook (), etc.)"
+  (declare (indent 1))
+   (let ((package-manager-key (if (eq system-type 'android) :ensure :straight)))
+    (if plist
+        ;; if there are additional arguments, add the package manager key
+        `(use-package ,name ,package-manager-key nil ,@plist)
+      ;; if no additional arguments, just use the package manager key
+      `(use-package ,name ,package-manager-key nil))))
 
 (defmacro use-package-desktop! (name &rest plist)
   "declares desktop-exclusive packages, this is to save me the hassle of using
@@ -85,7 +117,7 @@ control flow"
   (setq agnostic-home-dir "~"))
 
 ;; configure emacs
-(use-package emacs
+(use-package-vanilla! emacs
   :custom
   (use-short-answers t)
   (visible-bell t)
@@ -124,6 +156,12 @@ control flow"
 	(menu-bar-mode -1)
 	(tool-bar-mode -1)
 	(scroll-bar-mode -1)
+	(add-to-list 'display-buffer-alist
+		     '((derived-mode . Info-mode)
+		       (display-buffer-reuse-mode-window)
+		       (dedicated . t)
+		       (body-function . (lambda (window)
+					  (select-window window)))))
 	(when (member "FantasqueSansM Nerd Font Mono" (font-family-list))
 	  (set-face-attribute 'default nil
 			      :family "FantasqueSansM Nerd Font Mono"
@@ -150,7 +188,7 @@ control flow"
    ("C-h k"   . describe-keymap)))
 
 ;; config of pre-installed emacs packages
-(use-package org
+(use-package-vanilla! org
   :custom
   (diary-file
    (concat agnostic-home-dir "/Documents/org/diary.org"))
@@ -210,7 +248,17 @@ control flow"
 	 ("C-h v" . helpful-variable)
  	 ("C-h k" . helpful-key)
  	 ("C-h x" . helpful-command)
- 	 ("C-h C-d" . helpful-at-point)))
+ 	 ("C-h C-d" . helpful-at-point))
+  :config
+  ;; add helpful buffers to display-buffers-alist to manage helpful
+  ;; buffers in an ergonomic way
+  (add-to-list 'display-buffer-alist
+	       '((derived-mode . helpful-mode)
+		 (display-buffer-reuse-mode-window)
+		 (dedicated . t)
+		 (body-function . (lambda (window)
+				    (select-window window))))))
+
 
 ;; orderless completion style for looser completions when needed
 (use-package-ensure! orderless
