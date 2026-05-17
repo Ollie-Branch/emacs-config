@@ -52,7 +52,7 @@ this code assumes you have already set (straight-use-package
 allocate time to fixing this by checking and enabling it myself if
 it's not enabled."
   (declare (indent 1))
-   (let ((package-manager-key (if (eq system-type 'android) :ensure :straight)))
+  (let ((package-manager-key (if (eq system-type 'android) :ensure :straight)))
     (if plist
         ;; if there are additional arguments, add the package manager key
         `(use-package ,name ,package-manager-key t ,@plist)
@@ -69,7 +69,7 @@ creating a ton of copy-pasted code that's hard to maintain.
 name is the name of the package, and the plist is the property list
 (:prelude (), :init (), :config (), :hook (), etc.)"
   (declare (indent 1))
-   (let ((package-manager-key (if (eq system-type 'android) :ensure :straight)))
+  (let ((package-manager-key (if (eq system-type 'android) :ensure :straight)))
     (if plist
         ;; if there are additional arguments, add the package manager key
         `(use-package ,name ,package-manager-key nil ,@plist)
@@ -117,13 +117,12 @@ name is the name of the package, and the plist is the property list
   (enable-recursive-minibuffers t)
   (minibuffer-prompt-properties
    '(read-only t cursor-intangible t face minibuffer-prompt))
-  ;; Only run GC when memory usage exceeds or is equal to 60MiB
-  (gc-cons-threshold (* 1024 1024 60)) 
   :config
   (savehist-mode 1)
   (save-place-mode 1)
   (global-auto-revert-mode 1)
   (global-visual-line-mode 1)
+  (global-visual-wrap-prefix-mode 1)
   (global-display-line-numbers-mode 1)
   (repeat-mode 1)
   (dolist (mode '(org-mode-hook term-mode-hook eshell-mode-hook))
@@ -180,6 +179,7 @@ name is the name of the package, and the plist is the property list
 ;; config of pre-installed emacs packages
 (use-package-builtin! org
   :mode ("\\.org\\'" . org-mode)
+  :commands (org-capture org-agenda)
   :custom
   (diary-file
    (concat agnostic-home-dir "/Documents/org/diary.org"))
@@ -210,26 +210,26 @@ name is the name of the package, and the plist is the property list
   (advice-add 'org-refile :after 'org-save-all-org-buffers))
 
 (use-package-ensure! modus-themes
-    :custom
+  :custom
   (modus-vivendi-palette-overrides
-      '((bg-main "#242424")
-	(bg-dim "#231e1f")
-	(fg-main "#dfe6e4")
-	(fg-dim "#b9bfbd")
-	(fg-alt "#bde9db")))
-    (modus-themes-mixed-fonts t)
-    (modus-themes-syntax '(faint))
-    (modus-themes-variable-pitch-ui t)
-    (modus-themes-headings
-	  '((1 . (variable-pitch 1.3))
-	    (2 . (variable-pitch semibold 1.28))
-	    (3 . (variable-pitch medium 1.24))
-	    (4 . (variable-pitch regular 1.2))
-	    (agenda-date . (1.3))
-	    (agenda-structure . (variable-pitch light 1.4))
-	    (t . (1.0))))
-    :config
-    (load-theme 'modus-vivendi t))
+   '((bg-main "#242424")
+     (bg-dim "#231e1f")
+     (fg-main "#dfe6e4")
+     (fg-dim "#b9bfbd")
+     (fg-alt "#bde9db")))
+  (modus-themes-mixed-fonts t)
+  (modus-themes-syntax '(faint))
+  (modus-themes-variable-pitch-ui t)
+  (modus-themes-headings
+   '((1 . (variable-pitch 1.3))
+     (2 . (variable-pitch semibold 1.28))
+     (3 . (variable-pitch medium 1.24))
+     (4 . (variable-pitch regular 1.2))
+     (agenda-date . (1.3))
+     (agenda-structure . (variable-pitch light 1.4))
+     (t . (1.0))))
+  :config
+  (load-theme 'modus-vivendi t))
 
 ;; install new packages and config them
 (use-package-ensure! no-littering
@@ -256,21 +256,12 @@ name is the name of the package, and the plist is the property list
 
 ;; orderless completion style for looser completions when needed
 (use-package-ensure! orderless
-    :custom
+  :custom
   (completion-styles '(orderless basic))
   (completion-category-overrides '((file
 				    (styles partial-completion))))
   (completion-category-defaults nil)
-  (completion-pcm-leading-wildcard t)
-  ;; You need this to get orderless to work with fido-vertical mode.
-  ;; Fido-vertical-mode is very greedy about setting up its own
-  ;; completion style.
-  :hook
-  (icomplete-minibuffer-setup . (lambda () (setq-local
-					    completion-styles
-					    '(orderless basic))))
-  ;; startup fido-vertical-mode after orderless is initialized
-  :config (fido-vertical-mode))
+  (completion-pcm-leading-wildcard t))
 
 ;; context windows with keyboard shortcuts
 (use-package-ensure! embark
@@ -301,16 +292,14 @@ name is the name of the package, and the plist is the property list
 ;; consult users will also want the embark-consult package.
 (use-package-ensure! embark-consult) ; only need to install it, embark loads it after consult if found
 
-;; will probably remove this package but I have commented it out for
-;; now to see how the workflow proceeds without it.
-;; (use-package-ensure! vertico
-;;   :custom
-;;   ;; (vertico-scroll-margin 0) ;; Different scroll margin
-;;   ;; (vertico-count 20) ;; Show more candidates
-;;   ;; (vertico-resize t) ;; Grow and shrink the Vertico minibuffer
-;;   (vertico-cycle t) ;; Enable cycling for `vertico-next/previous'
-;;   :init
-;;   (vertico-mode))
+(use-package-ensure! vertico
+  :custom
+  ;; (vertico-scroll-margin 0) ;; Different scroll margin
+  ;; (vertico-count 20) ;; Show more candidates
+  ;; (vertico-resize t) ;; Grow and shrink the Vertico minibuffer
+  (vertico-cycle t) ;; Enable cycling for `vertico-next/previous'
+  :init
+  (vertico-mode))
 
 ;; example configuration for consult
 (use-package-ensure! consult
@@ -402,16 +391,16 @@ name is the name of the package, and the plist is the property list
   ;; optionally make narrowing help available in the minibuffer.
   ;; you may want to use `embark-prefix-help-command' or which-key instead.
   ;; (keymap-set consult-narrow-map (concat consult-narrow-key " ?") #'consult-narrow-help)
-)
+  )
 
 (use-package-ensure! marginalia
-    :bind (:map minibuffer-local-map
+  :bind (:map minibuffer-local-map
 	      ("M-a" . marginalia-cycle))
   :init (marginalia-mode))
 
 ;; popup window for autocompletions
 (use-package-ensure! corfu
-    :custom
+  :custom
   (corfu-auto t)
   (corfu-auto-delay 0.2)
   :init (global-corfu-mode))
@@ -424,7 +413,7 @@ name is the name of the package, and the plist is the property list
 
 ;; editing ergonomics
 (use-package-ensure! evil
-    :config
+  :config
   (evil-mode 1)
   (define-key evil-normal-state-map (kbd "j") 'evil-next-visual-line)
   (define-key evil-normal-state-map (kbd "k") 'evil-previous-visual-line))
@@ -436,7 +425,7 @@ name is the name of the package, and the plist is the property list
 ;; would probably rather use project.el but dashboard only supports projectile
 ;; afaik
 (use-package-ensure! projectile
-    :config
+  :config
   (projectile-mode 1)
   (define-key projectile-mode-map (kbd "C-c p") 'projectile-command-map))
 
@@ -455,6 +444,10 @@ name is the name of the package, and the plist is the property list
 
 ;; Centered editing of org documents, when no other windows are
 ;; visible
+
+;; BUG when disabling visual-line-mode darkroom crashes emacs. Another
+;; package may be suitable here or I could just make a way to hook
+;; disabling darkroom-tentative-mode with disabling visual-line-mode
 (use-package-ensure! darkroom
   :if (not (eq system-type 'android))
   :hook (org-mode . darkroom-tentative-mode))
@@ -464,21 +457,28 @@ name is the name of the package, and the plist is the property list
   (org-mode))
 
 (use-package-ensure! org-modern
+  :defer t
+  :after (mixed-pitch)
   :custom
   (org-modern-star 'replace)
   (org-modern-todo-faces
-   '(("TODO"	   :foreground "#D16168" :weight bold :height 120)
-     ("PROJ"	   :foreground "#B4B4E4" :weight bold :height 120)
-     ("READ"	   :foreground "#A8C4DC" :weight bold :height 120)
-     ("IDEA"	   :foreground "#A8C4DC" :weight bold :height 120)
-     ("REPORTED"   :foreground "#D16168" :weight bold :height 120)
-     ("BUG"	   :foreground "#D16168" :weight bold :height 120)
-     ("KNOWNCAUSE" :foreground "#D16168" :weight bold :height 120)
-     ("FIXED"	   :foreground "#B5C5AA" :weight bold :height 120)
-     ("CANCELLED"  :foreground "#B4B4E4" :weight bold :height 120)
-     ("HIATUS"     :foreground "#B4B4E4" :weight bold :height 120)
-     ("DONE"	   :foreground "#B5C5AA" :weight bold :height 120)))
+   '(("TODO"	   :foreground "#D16168" :weight bold)
+     ("PROJ"	   :foreground "#B4B4E4" :weight bold)
+     ("READ"	   :foreground "#A8C4DC" :weight bold)
+     ("IDEA"	   :foreground "#A8C4DC" :weight bold)
+     ("REPORTED"   :foreground "#D16168" :weight bold)
+     ("BUG"	   :foreground "#D16168" :weight bold)
+     ("KNOWNCAUSE" :foreground "#D16168" :weight bold)
+     ("FIXED"	   :foreground "#B5C5AA" :weight bold)
+     ("CANCELLED"  :foreground "#B4B4E4" :weight bold)
+     ("HIATUS"     :foreground "#B4B4E4" :weight bold)
+     ("DONE"	   :foreground "#B5C5AA" :weight bold)))
+  :config
+  (set-face-attribute 'org-modern-label nil
+		      :height 1.0)
   :hook
+  (org-mode . (lambda () (add-to-list 'mixed-pitch-fixed-pitch-faces
+				      'org-modern-date-inactive)))
   (org-mode . org-modern-mode)
   (org-agenda-finalize . org-modern-agenda))
 
@@ -488,32 +488,30 @@ name is the name of the package, and the plist is the property list
 	     :type git
 	     :host github
 	     :repo "jdtsmith/org-modern-indent")
-  :init
-  (defun org-modern-indent-mode-start () (org-modern-indent-mode 90))
-  :hook (org-mode . org-modern-indent-mode-start))
+  :hook (org-mode . (lambda () (org-modern-indent-mode 90))))
 
 ;; configure dependency for doom-modeline
 (use-package-ensure! nerd-icons
-    :custom
+  :custom
   (nerd-icons-scale-factor 0.85)
   (nerd-icons-font-family "Symbols Nerd Font Mono"))
 
 ;; dependency for dashboard (and anything else that has page breaks)
 ;; so we display them as clean lines
 (use-package-ensure! page-break-lines
-    :config (global-page-break-lines-mode))
+  :config (global-page-break-lines-mode))
 
 (use-package-ensure! spacious-padding
-    :custom
+  :custom
   (spacious-padding-widths
-        '( :internal-border-width 15
-           :header-line-width 4
-           :mode-line-width 6
-           :custom-button-width 3
-           :tab-width 4
-           :right-divider-width 30
-           :scroll-bar-width 8
-           :fringe-width 8))
+   '( :internal-border-width 15
+      :header-line-width 4
+      :mode-line-width 6
+      :custom-button-width 3
+      :tab-width 4
+      :right-divider-width 30
+      :scroll-bar-width 8
+      :fringe-width 8))
   :config
   (spacious-padding-mode 1))
 
@@ -535,13 +533,14 @@ name is the name of the package, and the plist is the property list
   (dashboard-center-content t)
   (dashboard-page-separator "\n\f\n")
   (dashboard-image-banner-max-height 240)
+  ;; TODO look into why the backend selection algorithm isn't working
   (dashboard-projects-backend 'projectile)
   (dashboard-projects-switch-function 'projectile-switch-project-by-name)
   (dashboard-startup-banner (cons "~/.config/emacs/splash/emacs-logo.png" "~/.config/emacs/splash/emacs-logo.txt"))
   :config (dashboard-setup-startup-hook))
 
 (use-package-ensure! doom-modeline
-    :custom
+  :custom
   (doom-modeline-spc-face-overrides
    (list :family (face-attribute 'fixed-pitch :family)))
   (doom-modeline-enable-buffer-position nil)
@@ -556,7 +555,7 @@ name is the name of the package, and the plist is the property list
   :mode ("README\\.md\\'" . gfm-mode)
   :custom (markdown-command "multimarkdown")
   :bind (:map markdown-mode-map
-         ("C-c C-e" . markdown-do)))
+              ("C-c C-e" . markdown-do)))
 
 (use-package-ensure! magit
   :if (not (eq system-type 'android))
