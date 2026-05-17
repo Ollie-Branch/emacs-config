@@ -566,7 +566,7 @@ name is the name of the package, and the plist is the property list
 
 (use-package-ensure! pdf-tools
   :if (not (eq system-type 'android))
-  :magic ("%pdf" . pdf-view-mode)
+  :magic ("%PDF" . pdf-view-mode)
   :config (pdf-tools-install :no-query))
 
 (use-package-ensure! dap-mode
