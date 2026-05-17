@@ -34,9 +34,6 @@
       (straight-use-package 'use-package)))
   (bootstrap-straight)
   (straight-use-package 'org))
-(setq evil-want-keybinding nil)
-
-(profiler-start 'cpu+mem)
 
 ;; functions & macros
 (defmacro use-package-ensure! (name &rest plist)
@@ -107,6 +104,8 @@ name is the name of the package, and the plist is the property list
 ;; configure emacs
 (use-package-builtin! emacs
   :custom
+  (evil-want-keybinding nil)
+  (user-emacs-directory "~/.cache/emacs/")
   (use-short-answers t)
   (visible-bell t)
   (history-length 25)
@@ -139,6 +138,7 @@ name is the name of the package, and the plist is the property list
   (which-key-mode 1)
   (which-key-setup-side-window-bottom)
   (toggle-debug-on-error)
+  (make-directory "~/.cache/emacs" t)
   (if (not (eq system-type 'android))
       (progn
 	(setq scroll-conservatively 101	    	    
@@ -179,6 +179,7 @@ name is the name of the package, and the plist is the property list
 
 ;; config of pre-installed emacs packages
 (use-package-builtin! org
+  :mode ("\\.org\\'" . org-mode)
   :custom
   (diary-file
    (concat agnostic-home-dir "/Documents/org/diary.org"))
@@ -209,7 +210,7 @@ name is the name of the package, and the plist is the property list
   (advice-add 'org-refile :after 'org-save-all-org-buffers))
 
 (use-package-ensure! modus-themes
-  :custom
+    :custom
   (modus-vivendi-palette-overrides
       '((bg-main "#242424")
 	(bg-dim "#231e1f")
@@ -231,6 +232,9 @@ name is the name of the package, and the plist is the property list
     (load-theme 'modus-vivendi t))
 
 ;; install new packages and config them
+(use-package-ensure! no-littering
+  :demand t)
+
 ;; discoverability packages
 ;;emacs, now more self-documenting
 (use-package-ensure! helpful
@@ -252,7 +256,7 @@ name is the name of the package, and the plist is the property list
 
 ;; orderless completion style for looser completions when needed
 (use-package-ensure! orderless
-  :custom
+    :custom
   (completion-styles '(orderless basic))
   (completion-category-overrides '((file
 				    (styles partial-completion))))
@@ -273,37 +277,26 @@ name is the name of the package, and the plist is the property list
   :bind
   (("C-," . embark-act)         ;; pick some comfortable binding
    ("C-;" . embark-dwim)        ;; good alternative: m-.
-   ("C-h b" . embark-bindings)) ;; alternative for `describe-bindings'
-
+   ("C-h b" . embark-bindings)  ;; alternative for `describe-bindings'
+   :map embark-symbol-map
+   ("h" . helpful-symbol)
+   :map embark-become-help-map
+   ("v" . helpful-variable)
+   ("f" . helpful-callable)
+   ("s" . helpful-symbol)) 
+  :custom
+  (eldoc-documentation-strategy #'eldoc-documentation-compose-eagerly)
+  (prefix-help-command #'embark-prefix-help-command)
   :init
-
-  ;; optionally replace the key help with a completing-read interface
-  (setq prefix-help-command #'embark-prefix-help-command)
-
-  ;; show the embark target at point via eldoc. you may adjust the
-  ;; eldoc strategy, if you want to see the documentation from
-  ;; multiple providers. beware that using this can be a little
-  ;; jarring since the message shown in the minibuffer can be more
-  ;; than one line, causing the modeline to move up and down:
-
-  ;; (add-hook 'eldoc-documentation-functions #'embark-eldoc-first-target)
-  ;; (setq eldoc-documentation-strategy #'eldoc-documentation-compose-eagerly)
-
-  ;; add embark to the mouse context menu. also enable `context-menu-mode'.
-  ;; (context-menu-mode 1)
-  ;; (add-hook 'context-menu-functions #'embark-context-menu 100)
-
+  (add-hook 'eldoc-documentation-functions #'embark-eldoc-first-target)
+  (context-menu-mode 1)
+  (add-hook 'context-menu-functions #'embark-context-menu 100)
   :config
   ;; hide the mode line of the embark live/completions buffers
   (add-to-list 'display-buffer-alist
                '("\\`\\*embark collect \\(live\\|completions\\)\\*"
                  nil
-                 (window-parameters (mode-line-format . none))))
-  ;; set embark keymaps to use helpful
-  (keymap-set embark-symbol-map "h" #'helpful-symbol)
-  (keymap-set embark-become-help-map "v" #'helpful-variable)
-  (keymap-set embark-become-help-map "f" #'helpful-callable)
-  (keymap-set embark-become-help-map "s" #'helpful-symbol))
+                 (window-parameters (mode-line-format . none)))))
 
 ;; consult users will also want the embark-consult package.
 (use-package-ensure! embark-consult) ; only need to install it, embark loads it after consult if found
@@ -376,24 +369,16 @@ name is the name of the package, and the plist is the property list
          ("M-s" . consult-history)                 ;; orig. next-matching-history-element
          ("M-r" . consult-history))                ;; orig. previous-matching-history-element
 
-  ;; the :init configuration is always executed (not lazy)
-  :init
-
+  :custom
+  (register-preview-delay 0.5)
+  (xref-show-xrefs-function #'consult-xref)
+  (xref-show-definitions-function #'consult-xref)
+  :config
   ;; tweak the register preview for `consult-register-load',
   ;; `consult-register-store' and the built-in commands.  this improves the
   ;; register formatting, adds thin separator lines, register sorting and hides
   ;; the window mode line.
   (advice-add #'register-preview :override #'consult-register-window)
-  (setq register-preview-delay 0.5)
-
-  ;; use consult to select xref locations with preview
-  (setq xref-show-xrefs-function #'consult-xref
-        xref-show-definitions-function #'consult-xref)
-
-  ;; configure other variables and modes in the :config section,
-  ;; after lazily loading the package.
-  :config
-
   ;; optionally configure preview. the default value
   ;; is 'any, such that any key triggers the preview.
   ;; (setq consult-preview-key 'any)
@@ -420,13 +405,13 @@ name is the name of the package, and the plist is the property list
 )
 
 (use-package-ensure! marginalia
-  :bind (:map minibuffer-local-map
+    :bind (:map minibuffer-local-map
 	      ("M-a" . marginalia-cycle))
   :init (marginalia-mode))
 
 ;; popup window for autocompletions
 (use-package-ensure! corfu
-  :custom
+    :custom
   (corfu-auto t)
   (corfu-auto-delay 0.2)
   :init (global-corfu-mode))
@@ -439,7 +424,7 @@ name is the name of the package, and the plist is the property list
 
 ;; editing ergonomics
 (use-package-ensure! evil
-  :config
+    :config
   (evil-mode 1)
   (define-key evil-normal-state-map (kbd "j") 'evil-next-visual-line)
   (define-key evil-normal-state-map (kbd "k") 'evil-previous-visual-line))
@@ -451,7 +436,7 @@ name is the name of the package, and the plist is the property list
 ;; would probably rather use project.el but dashboard only supports projectile
 ;; afaik
 (use-package-ensure! projectile
-  :config
+    :config
   (projectile-mode 1)
   (define-key projectile-mode-map (kbd "C-c p") 'projectile-command-map))
 
@@ -459,11 +444,11 @@ name is the name of the package, and the plist is the property list
   :config
   (require 'smartparens-config)
   :hook
-  ((prog-mode text-mode markdown-mode org-mode) . smartparens-mode))
+  (prog-mode text-mode markdown-mode org-mode))
 
 ;; eye-candy
 (use-package-ensure! org-appear
-  :hook (org-mode . org-appear-mode))
+  :hook (org-mode))
 
 (use-package-ensure! org-fragtog
   :hook (org-mode . org-fragtog-mode))
@@ -476,7 +461,7 @@ name is the name of the package, and the plist is the property list
 
 (use-package-ensure! mixed-pitch
   :hook
-  (org-mode . mixed-pitch-mode))
+  (org-mode))
 
 (use-package-ensure! org-modern
   :custom
@@ -497,28 +482,29 @@ name is the name of the package, and the plist is the property list
   (org-mode . org-modern-mode)
   (org-agenda-finalize . org-modern-agenda))
 
-(use-package-ensure! org-modern-indent
+(use-package org-modern-indent
   :if (not (eq system-type 'android))
-  :straight
-  (org-modern-indent
-   :type git
-   :host github
-   :repo "jdtsmith/org-modern-indent")
-  :config (add-hook 'org-mode-hook #'org-modern-indent-mode 90))
+  :straight (org-modern-indent
+	     :type git
+	     :host github
+	     :repo "jdtsmith/org-modern-indent")
+  :init
+  (defun org-modern-indent-mode-start () (org-modern-indent-mode 90))
+  :hook (org-mode . org-modern-indent-mode-start))
 
 ;; configure dependency for doom-modeline
 (use-package-ensure! nerd-icons
-  :custom
+    :custom
   (nerd-icons-scale-factor 0.85)
   (nerd-icons-font-family "Symbols Nerd Font Mono"))
 
 ;; dependency for dashboard (and anything else that has page breaks)
 ;; so we display them as clean lines
 (use-package-ensure! page-break-lines
-  :config (global-page-break-lines-mode))
+    :config (global-page-break-lines-mode))
 
 (use-package-ensure! spacious-padding
-  :custom
+    :custom
   (spacious-padding-widths
         '( :internal-border-width 15
            :header-line-width 4
@@ -532,6 +518,7 @@ name is the name of the package, and the plist is the property list
   (spacious-padding-mode 1))
 
 (use-package-ensure! dashboard
+  :after (projectile)
   :custom
   (dashboard-display-icons-p t)
   (dashboard-icon-type 'nerd-icons)
@@ -548,12 +535,13 @@ name is the name of the package, and the plist is the property list
   (dashboard-center-content t)
   (dashboard-page-separator "\n\f\n")
   (dashboard-image-banner-max-height 240)
+  (dashboard-projects-backend 'projectile)
   (dashboard-projects-switch-function 'projectile-switch-project-by-name)
   (dashboard-startup-banner (cons "~/.config/emacs/splash/emacs-logo.png" "~/.config/emacs/splash/emacs-logo.txt"))
   :config (dashboard-setup-startup-hook))
 
 (use-package-ensure! doom-modeline
-  :custom
+    :custom
   (doom-modeline-spc-face-overrides
    (list :family (face-attribute 'fixed-pitch :family)))
   (doom-modeline-enable-buffer-position nil)
@@ -563,7 +551,6 @@ name is the name of the package, and the plist is the property list
   :config
   (doom-modeline-mode 1))
 
-
 ;; format specific major modes
 (use-package-ensure! markdown-mode
   :mode ("README\\.md\\'" . gfm-mode)
@@ -571,25 +558,21 @@ name is the name of the package, and the plist is the property list
   :bind (:map markdown-mode-map
          ("C-c C-e" . markdown-do)))
 
-;; desktop-only packages
 (use-package-ensure! magit
   :if (not (eq system-type 'android))
-  :defer t
+  :bind
+  ("C-x g" . magit-status)
   :custom
   (magit-display-buffer-function #'magit-display-buffer-same-window-except-diff-v1))
 
-;; android has pdf viewers that work better on that platform.
 (use-package-ensure! pdf-tools
   :if (not (eq system-type 'android))
-  :defer t
   :magic ("%pdf" . pdf-view-mode)
   :config (pdf-tools-install :no-query))
 
- (use-package-ensure! dap-mode
-  :if (not (eq system-type 'android)))
+(use-package-ensure! dap-mode
+  :if (not (eq system-type 'android))
+  :hook (prog-mode))
 
 (use-package-ensure! simple-httpd
   :if (not (eq system-type 'android)))
-
-(profiler-stop)
-(profiler-report)
