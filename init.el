@@ -131,7 +131,10 @@ emacs still tries to pull the packages in even with it."
   (global-visual-wrap-prefix-mode 1)
   (global-display-line-numbers-mode 1)
   (repeat-mode 1)
-  (dolist (mode '(org-mode-hook term-mode-hook eshell-mode-hook))
+  (dolist (mode '(org-mode-hook
+		  term-mode-hook
+		  eshell-mode-hook
+		  dashboard-mode-hook))
     (add-hook mode (lambda () (display-line-numbers-mode -1))))
   ;; some weirdness with org-mode's time tracking trips check-parens
   ;; so I removed it. I would like to conditionally enable the hook,
