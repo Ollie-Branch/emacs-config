@@ -133,18 +133,17 @@ name is the name of the package, and the plist is the property list
   ;; (add-hook 'before-save-hook 'check-parens)
   (add-hook 'prog-mode-hook 'display-fill-column-indicator-mode)
   (recentf-mode 1)
-  (make-directory "~/.config/emacs/backups" t)
+  (make-directory (concat agnostic-home-dir "/.config/emacs/backups") t)
   (which-key-mode 1)
-  (which-key-setup-side-window-bottom)
-  ;; toggling debug on android with just a touchscreen is annoying
-  ;; and the config is full of errors on android atm
-  (when (not (eq system-type 'android))
-    (toggle-debug-on-error))
-  (make-directory "~/.cache/emacs" t)
+  (which-key-setup-minibuffer)
+  (make-directory (concat agnostic-home-dir "/.cache/emacs") t)
   (if (not (eq system-type 'android))
       (progn
 	(setq scroll-conservatively 101	    	    
 	      use-dialog-box nil)
+	;; toggling debug on android with just a touchscreen is annoying
+	;; and the config is full of errors on android atm
+	(toggle-debug-on-error)
 	(tool-bar-mode -1)
 	(scroll-bar-mode -1)
 	(add-to-list 'display-buffer-alist
