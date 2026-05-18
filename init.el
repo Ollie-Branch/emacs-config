@@ -76,6 +76,13 @@ name is the name of the package, and the plist is the property list
       ;; if no additional arguments, just use the package manager key
       `(use-package ,name ,package-manager-key nil))))
 
+(defmacro use-package-desktop! (name &rest plist)
+  "Declares desktop-only packages, using this instead of :if because
+emacs still tries to pull the packages in even with it."
+  (declare (indent 1))
+  (when (not (eq system-type 'android))
+    `(use-package ,name ,@plist)))
+
 ;; some utility functions that are useful outside of config
 (defun read-lines-from-file (filepath)
   "return a list of lines of a file at filepath."
@@ -112,7 +119,6 @@ name is the name of the package, and the plist is the property list
   (global-auto-revert-non-file-buffers t)
   (custom-safe-themes t)
   (inhibit-startup-message t)
-  (initial-buffer-choice 'dashboard-open)
   (backup-directory-alist '(("." . (concat agnostic-home-dir "/.config/emacs/backups"))))
   (enable-recursive-minibuffers t)
   (minibuffer-prompt-properties
@@ -160,7 +166,10 @@ name is the name of the package, and the plist is the property list
 	(when (member "Source Sans Pro" (font-family-list))
 	  (set-face-attribute 'variable-pitch nil
 			      :family "Source Sans Pro"
-			      :height 120)))
+			      :height 120))
+	;; dashboard doesn't seem to be on melpa or elpa, or android
+	;; doesn't seem to pick them up for some reason
+	(setq initial-buffer-choice 'dashboard-open))
     (progn
       (setq use-dialog-box t	     
 	    tool-bar-position 'bottom)
@@ -239,7 +248,7 @@ name is the name of the package, and the plist is the property list
   :demand t)
 
 ;; discoverability packages
-;;emacs, now more self-documenting
+;; emacs, now more self-documenting
 (use-package-ensure! helpful
   :bind (("C-h f" . helpful-callable)
 	 ("C-h v" . helpful-variable)
@@ -256,6 +265,8 @@ name is the name of the package, and the plist is the property list
 		 (body-function . (lambda (window)
 				    (select-window window))))))
 
+(use-package-ensure! macrostep
+  :bind ("C-c e" . macrostep-expand))
 
 ;; orderless completion style for looser completions when needed
 (use-package-ensure! orderless
@@ -360,7 +371,6 @@ name is the name of the package, and the plist is the property list
          :map minibuffer-local-map
          ("M-s" . consult-history)                 ;; orig. next-matching-history-element
          ("M-r" . consult-history))                ;; orig. previous-matching-history-element
-
   :custom
   (register-preview-delay 0.5)
   (xref-show-xrefs-function #'consult-xref)
@@ -386,11 +396,9 @@ name is the name of the package, and the plist is the property list
    consult-source-recent-file consult-source-project-recent-file
    ;; :preview-key "m-."
    :preview-key '(:debounce 0.4 any))
-
   ;; optionally configure the narrowing key.
   ;; both < and c-+ work reasonably well.
   (setq consult-narrow-key "<") ;; "c-+"
-
   ;; optionally make narrowing help available in the minibuffer.
   ;; you may want to use `embark-prefix-help-command' or which-key instead.
   ;; (keymap-set consult-narrow-map (concat consult-narrow-key " ?") #'consult-narrow-help)
@@ -415,15 +423,21 @@ name is the name of the package, and the plist is the property list
   :config (global-hl-todo-mode))
 
 ;; editing ergonomics
-(use-package-ensure! evil
-  :if (not (eq system-type 'android))
+(use-package-ensure! yasnippet
+  :custom
+  (yas-snippet-dirs '("~/Templates/yasnippet"))
+  :config
+  (yas-global-mode 1))
+
+(use-package-desktop! evil
+  :straight t
   :config
   (evil-mode 1)
   (define-key evil-normal-state-map (kbd "j") 'evil-next-visual-line)
   (define-key evil-normal-state-map (kbd "k") 'evil-previous-visual-line))
 
-(use-package-ensure! evil-collection
-  :if (not (eq system-type 'android))
+(use-package-desktop! evil-collection
+  :straight t
   :after (evil)
   :config (evil-collection-init))
 
@@ -453,8 +467,8 @@ name is the name of the package, and the plist is the property list
 ;; BUG when disabling visual-line-mode darkroom crashes emacs. Another
 ;; package may be suitable here or I could just make a way to hook
 ;; disabling darkroom-tentative-mode with disabling visual-line-mode
-(use-package-ensure! darkroom
-  :if (not (eq system-type 'android))
+(use-package-desktop! darkroom
+  :straight t
   :hook (org-mode . darkroom-tentative-mode))
 
 (use-package-ensure! mixed-pitch
@@ -478,12 +492,12 @@ name is the name of the package, and the plist is the property list
      ("CANCELLED"  :foreground "#B4B4E4" :weight bold)
      ("HIATUS"     :foreground "#B4B4E4" :weight bold)
      ("DONE"	   :foreground "#B5C5AA" :weight bold)))
+  :hook
+  (org-modern . (lambda () (add-to-list 'mixed-pitch-fixed-pitch-faces
+					'org-modern-date-inactive)))
   :config
   (set-face-attribute 'org-modern-label nil
 		      :height 1.0)
-  :hook
-  (org-mode . (lambda () (add-to-list 'mixed-pitch-fixed-pitch-faces
-				      'org-modern-date-inactive)))
   (org-mode . org-modern-mode)
   (org-agenda-finalize . org-modern-agenda))
 
@@ -520,7 +534,8 @@ name is the name of the package, and the plist is the property list
   :config
   (spacious-padding-mode 1))
 
-(use-package-ensure! dashboard
+(use-package-desktop! dashboard
+  :straight t
   :after (projectile)
   :custom
   (dashboard-display-icons-p t)
@@ -562,21 +577,21 @@ name is the name of the package, and the plist is the property list
   :bind (:map markdown-mode-map
               ("C-c C-e" . markdown-do)))
 
-(use-package-ensure! magit
-  :if (not (eq system-type 'android))
+(use-package-desktop! magit
+  :straight t
   :bind
   ("C-x g" . magit-status)
   :custom
   (magit-display-buffer-function #'magit-display-buffer-same-window-except-diff-v1))
 
-(use-package-ensure! pdf-tools
-  :if (not (eq system-type 'android))
+(use-package-desktop! pdf-tools
+  :straight t
   :magic ("%PDF" . pdf-view-mode)
   :config (pdf-tools-install :no-query))
 
-(use-package-ensure! dap-mode
-  :if (not (eq system-type 'android))
+(use-package-desktop! dap-mode
+  :straight t
   :hook (prog-mode))
 
-(use-package-ensure! simple-httpd
-  :if (not (eq system-type 'android)))
+(use-package-desktop! simple-httpd
+  :straight t)
