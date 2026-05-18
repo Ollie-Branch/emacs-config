@@ -105,7 +105,7 @@ name is the name of the package, and the plist is the property list
 (use-package-builtin! emacs
   :custom
   (evil-want-keybinding nil)
-  (user-emacs-directory "~/.cache/emacs/")
+  (user-emacs-directory (concat agnostic-home-dir "/.cache/emacs/"))
   (use-short-answers t)
   (visible-bell t)
   (history-length 25)
@@ -113,7 +113,7 @@ name is the name of the package, and the plist is the property list
   (custom-safe-themes t)
   (inhibit-startup-message t)
   (initial-buffer-choice 'dashboard-open)
-  (backup-directory-alist '(("." . "~/.config/emacs/backups")))
+  (backup-directory-alist '(("." . (concat agnostic-home-dir "/.config/emacs/backups"))))
   (enable-recursive-minibuffers t)
   (minibuffer-prompt-properties
    '(read-only t cursor-intangible t face minibuffer-prompt))
@@ -136,13 +136,15 @@ name is the name of the package, and the plist is the property list
   (make-directory "~/.config/emacs/backups" t)
   (which-key-mode 1)
   (which-key-setup-side-window-bottom)
-  (toggle-debug-on-error)
+  ;; toggling debug on android with just a touchscreen is annoying
+  ;; and the config is full of errors on android atm
+  (when (not (eq system-type 'android))
+    (toggle-debug-on-error))
   (make-directory "~/.cache/emacs" t)
   (if (not (eq system-type 'android))
       (progn
 	(setq scroll-conservatively 101	    	    
 	      use-dialog-box nil)
-	(menu-bar-mode -1)
 	(tool-bar-mode -1)
 	(scroll-bar-mode -1)
 	(add-to-list 'display-buffer-alist
@@ -163,11 +165,13 @@ name is the name of the package, and the plist is the property list
     (progn
       (setq use-dialog-box t	     
 	    tool-bar-position 'bottom)
-      (set-common-vars)
       (modifier-bar-mode 1)
-      (add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/") t)
+      ;; initialize use-package on android
+      (require 'package)
       (package-initialize)
-      (menu-bar-mode 1)))
+      (add-to-list 'package-archives
+		   '("elpa" . "https://elpa.gnu.org/packages/")
+		   '("melpa" . "https://melpa.org/packages/"))))
   :bind
   (("C-x C-b" . ibuffer)
    ("C-c w l" . windmove-right)
@@ -413,12 +417,14 @@ name is the name of the package, and the plist is the property list
 
 ;; editing ergonomics
 (use-package-ensure! evil
+  :if (not (eq system-type 'android))
   :config
   (evil-mode 1)
   (define-key evil-normal-state-map (kbd "j") 'evil-next-visual-line)
   (define-key evil-normal-state-map (kbd "k") 'evil-previous-visual-line))
 
 (use-package-ensure! evil-collection
+  :if (not (eq system-type 'android))
   :after (evil)
   :config (evil-collection-init))
 
