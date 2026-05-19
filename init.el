@@ -266,6 +266,8 @@ emacs still tries to pull the packages in even with it."
   :config
   (load-theme 'modus-vivendi t))
 
+(use-package-builtin! tab-bar)
+
 ;; This isn't technically builtin but you *must* install it through
 ;; your distro's package manager because mu relies on the versions
 ;; being the same
@@ -273,6 +275,14 @@ emacs still tries to pull the packages in even with it."
   :straight nil
   :load-path "/usr/share/emacs/site-lisp/mu4e"
   :commands (mu4e)
+  :config
+  (add-to-list 'display-buffer-alist
+	       '((derived-mode . mu4e-view-mode)
+		 (display-buffer-full-frame)))
+  (add-to-list 'display-buffer-alist
+	       '((derived-mode . mu4e-main-mode)
+		 (display-buffer-in-tab)
+		 (tab-name . "email")))
   :custom
   (mu4e-change-filenames-when-moving t)
   ;; Refresh mail using isync every 10 minutes
@@ -362,9 +372,8 @@ emacs still tries to pull the packages in even with it."
 
 (use-package-ensure! vertico
   :custom
-  ;; (vertico-scroll-margin 0) ;; Different scroll margin
-  ;; (vertico-count 20) ;; Show more candidates
-  ;; (vertico-resize t) ;; Grow and shrink the Vertico minibuffer
+  (vertico-scroll-margin 12) ;; Different scroll margin
+  (vertico-count 24) ;; Show more candidates
   (vertico-cycle t) ;; Enable cycling for `vertico-next/previous'
   :init
   (vertico-mode))
@@ -519,13 +528,9 @@ emacs still tries to pull the packages in even with it."
 
 ;; Centered editing of org documents, when no other windows are
 ;; visible
-
-;; BUG when disabling visual-line-mode darkroom crashes emacs. Another
-;; package may be suitable here or I could just make a way to hook
-;; disabling darkroom-tentative-mode with disabling visual-line-mode
-(use-package-desktop! darkroom
+(use-package-desktop! olivetti
   :straight t
-  :hook (org-mode . darkroom-tentative-mode))
+  :hook (org-mode . olivetti-mode))
 
 (use-package-ensure! mixed-pitch
   :hook
