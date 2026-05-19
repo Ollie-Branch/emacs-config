@@ -275,6 +275,9 @@ emacs still tries to pull the packages in even with it."
   :straight nil
   :load-path "/usr/share/emacs/site-lisp/mu4e"
   :commands (mu4e)
+  :custom
+  (mu4e-headers-open-after-move nil)
+  (mu4e-headers-advance-after-mark nil)
   :config
   (add-to-list 'display-buffer-alist
 	       '((derived-mode . mu4e-view-mode)
