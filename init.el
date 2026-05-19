@@ -35,6 +35,8 @@
   (bootstrap-straight)
   (straight-use-package 'org))
 
+(load (concat (file-name-directory user-init-file) "config-locals.el"))
+
 ;; functions & macros
 (defmacro use-package-ensure! (name &rest plist)
   "Declares and configures a package, while ensuring it's installed.
@@ -143,6 +145,17 @@ emacs still tries to pull the packages in even with it."
   (recentf-mode 1)
   (which-key-mode 1)
   (which-key-setup-minibuffer)
+  (add-to-list 'display-buffer-alist
+	       '((or (derived-mode . Info-mode)
+		     (derived-mode . help-mode))
+		 (display-buffer-in-side-window)
+		 (side . right)
+		 (body-function . (lambda (window)
+				    (select-window window)))))
+  (add-to-list 'display-buffer-alist
+	       '((derived-mode . dired-mode)
+		 (display-buffer-in-side-window)
+		 (side . left)))
   (if (not (eq system-type 'android))
       (progn
 	(setq scroll-conservatively 101	    	    
@@ -156,12 +169,6 @@ emacs still tries to pull the packages in even with it."
 	      '(("." . "~/.config/emacs/backups")))
 	(tool-bar-mode -1)
 	(scroll-bar-mode -1)
-	(add-to-list 'display-buffer-alist
-		     '((derived-mode . Info-mode)
-		       (display-buffer-reuse-mode-window)
-		       (dedicated . t)
-		       (body-function . (lambda (window)
-					  (select-window window)))))
 	(when (member "FantasqueSansM Nerd Font Mono" (font-family-list))
 	  (set-face-attribute 'default nil
 			      :family "FantasqueSansM Nerd Font Mono"
@@ -225,24 +232,17 @@ emacs still tries to pull the packages in even with it."
   :config
   (advice-add 'org-refile :after 'org-save-all-org-buffers))
 
-(use-package-builtin! mu4e
-  :load-path "/usr/share/emacs/site-lisp/mu4e"
-  :custom
-  (mu4e-change-filenames-when-moving t)
-  ;; Refresh mail using isync every 10 minutes
-  (mu4e-update-interval (* 10 60))
-  (mu4e-get-mail-command "mbsync -a")
-  (mu4e-maildir "~/Mail")
-  (mu4e-drafts-folder "/[Gmail]/Drafts")
-  (mu4e-sent-folder   "/[Gmail]/Sent Mail")
-  (mu4e-refile-folder "/[Gmail]/All Mail")
-  (mu4e-trash-folder  "/[Gmail]/Trash")
-  (mu4e-maildir-shortcuts
-      '(("/Inbox"             . ?i)
-        ("/[Gmail]/Sent Mail" . ?s)
-        ("/[Gmail]/Trash"     . ?t)
-        ("/[Gmail]/Drafts"    . ?d)
-        ("/[Gmail]/All Mail"  . ?a))))
+(use-package-builtin! dired
+  :hook
+  (dired-mode . dired-hide-details-mode))
+
+(use-package-builtin! eshell
+  :commands (eshell)
+  :init
+  (add-to-list 'display-buffer-alist
+	       '("\\*eshell\\*"
+		 (display-buffer-in-side-window)
+		 (side . bottom))))
 
 (use-package-ensure! modus-themes
   :custom
@@ -265,6 +265,33 @@ emacs still tries to pull the packages in even with it."
      (t . (1.0))))
   :config
   (load-theme 'modus-vivendi t))
+
+;; This isn't technically builtin but you *must* install it through
+;; your distro's package manager because mu relies on the versions
+;; being the same
+(use-package-desktop! mu4e
+  :straight nil
+  :load-path "/usr/share/emacs/site-lisp/mu4e"
+  :commands (mu4e)
+  :custom
+  (mu4e-change-filenames-when-moving t)
+  ;; Refresh mail using isync every 10 minutes
+  (mu4e-update-interval (* 10 60))
+  (mu4e-get-mail-command "mbsync -a")
+  ;; maildir-personal is a variable you should set in another file
+  ;; named config-locals.el
+  (mu4e-maildir maildir-personal)
+  ;; These are assuming you're using gmail
+  (mu4e-drafts-folder "/[Gmail]/Drafts")
+  (mu4e-sent-folder   "/[Gmail]/Sent Mail")
+  (mu4e-refile-folder "/[Gmail]/All Mail")
+  (mu4e-trash-folder  "/[Gmail]/Trash")
+  (mu4e-maildir-shortcuts
+      '(("/Inbox"             . ?i)
+        ("/[Gmail]/Sent Mail" . ?s)
+        ("/[Gmail]/Trash"     . ?t)
+        ("/[Gmail]/Drafts"    . ?d)
+        ("/[Gmail]/All Mail"  . ?a))))
 
 ;; install new packages and config them
 (use-package-ensure! no-littering
@@ -324,7 +351,11 @@ emacs still tries to pull the packages in even with it."
   (add-to-list 'display-buffer-alist
                '("\\`\\*embark collect \\(live\\|completions\\)\\*"
                  nil
-                 (window-parameters (mode-line-format . none)))))
+                 (window-parameters (mode-line-format . none))))
+  (add-to-list 'display-buffer-alist
+	       '("\\*Embark Actions\\*"
+		 (display-buffer-in-side-window)
+		 (side . bottom))))
 
 ;; consult users will also want the embark-consult package.
 (use-package-ensure! embark-consult) ; only need to install it, embark loads it after consult if found
@@ -518,8 +549,6 @@ emacs still tries to pull the packages in even with it."
      ("HIATUS"     :foreground "#B4B4E4" :weight bold)
      ("DONE"	   :foreground "#B5C5AA" :weight bold)))
   :hook
-  ;; (org-modern-mode . (lambda () (add-to-list 'mixed-pitch-fixed-pitch-faces
-  ;; 					'org-modern-date-inactive)))
   (org-mode . org-modern-mode)
   (org-agenda-finalize . org-modern-agenda)
   :config
@@ -594,6 +623,10 @@ emacs still tries to pull the packages in even with it."
   (doom-modeline-icon t)
   :config
   (doom-modeline-mode 1))
+
+(use-package-desktop! nerd-icons-dired
+  :straight t
+  :hook (dired-mode . nerd-icons-dired-mode))
 
 ;; format specific major modes
 (use-package-ensure! markdown-mode
