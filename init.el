@@ -119,7 +119,6 @@ emacs still tries to pull the packages in even with it."
   (global-auto-revert-non-file-buffers t)
   (custom-safe-themes t)
   (inhibit-startup-message t)
-  (backup-directory-alist '(("." . (concat agnostic-home-dir "/.config/emacs/backups"))))
   (enable-recursive-minibuffers t)
   (minibuffer-prompt-properties
    '(read-only t cursor-intangible t face minibuffer-prompt))
@@ -142,10 +141,8 @@ emacs still tries to pull the packages in even with it."
   ;; (add-hook 'before-save-hook 'check-parens)
   (add-hook 'prog-mode-hook 'display-fill-column-indicator-mode)
   (recentf-mode 1)
-  (make-directory (concat agnostic-home-dir "/.config/emacs/backups") t)
   (which-key-mode 1)
   (which-key-setup-minibuffer)
-  (make-directory (concat agnostic-home-dir "/.cache/emacs") t)
   (if (not (eq system-type 'android))
       (progn
 	(setq scroll-conservatively 101	    	    
@@ -153,6 +150,10 @@ emacs still tries to pull the packages in even with it."
 	;; toggling debug on android with just a touchscreen is annoying
 	;; and the config is full of errors on android atm
 	(toggle-debug-on-error)
+	(make-directory "~/.cache/emacs" t)
+	(make-directory "~/.config/emacs/backups" t)
+	(setq backup-directory-alist
+	      '(("." . "~/.config/emacs/backups")))
 	(tool-bar-mode -1)
 	(scroll-bar-mode -1)
 	(add-to-list 'display-buffer-alist
@@ -224,6 +225,25 @@ emacs still tries to pull the packages in even with it."
   :config
   (advice-add 'org-refile :after 'org-save-all-org-buffers))
 
+(use-package-builtin! mu4e
+  :load-path "/usr/share/emacs/site-lisp/mu4e"
+  :custom
+  (mu4e-change-filenames-when-moving t)
+  ;; Refresh mail using isync every 10 minutes
+  (mu4e-update-interval (* 10 60))
+  (mu4e-get-mail-command "mbsync -a")
+  (mu4e-maildir "~/Mail")
+  (mu4e-drafts-folder "/[Gmail]/Drafts")
+  (mu4e-sent-folder   "/[Gmail]/Sent Mail")
+  (mu4e-refile-folder "/[Gmail]/All Mail")
+  (mu4e-trash-folder  "/[Gmail]/Trash")
+  (mu4e-maildir-shortcuts
+      '(("/Inbox"             . ?i)
+        ("/[Gmail]/Sent Mail" . ?s)
+        ("/[Gmail]/Trash"     . ?t)
+        ("/[Gmail]/Drafts"    . ?d)
+        ("/[Gmail]/All Mail"  . ?a))))
+
 (use-package-ensure! modus-themes
   :custom
   (modus-vivendi-palette-overrides
@@ -263,8 +283,8 @@ emacs still tries to pull the packages in even with it."
   ;; buffers in an ergonomic way
   (add-to-list 'display-buffer-alist
 	       '((derived-mode . helpful-mode)
-		 (display-buffer-reuse-mode-window)
-		 (dedicated . t)
+		 (display-buffer-in-side-window)
+		 (side . right)
 		 (body-function . (lambda (window)
 				    (select-window window))))))
 
@@ -432,6 +452,8 @@ emacs still tries to pull the packages in even with it."
   :config
   (yas-global-mode 1))
 
+(use-package-ensure! yasnippet-snippets)
+
 (use-package-desktop! evil
   :straight t
   :config
@@ -496,13 +518,13 @@ emacs still tries to pull the packages in even with it."
      ("HIATUS"     :foreground "#B4B4E4" :weight bold)
      ("DONE"	   :foreground "#B5C5AA" :weight bold)))
   :hook
-  (org-modern . (lambda () (add-to-list 'mixed-pitch-fixed-pitch-faces
-					'org-modern-date-inactive)))
+  ;; (org-modern-mode . (lambda () (add-to-list 'mixed-pitch-fixed-pitch-faces
+  ;; 					'org-modern-date-inactive)))
+  (org-mode . org-modern-mode)
+  (org-agenda-finalize . org-modern-agenda)
   :config
   (set-face-attribute 'org-modern-label nil
-		      :height 1.0)
-  (org-mode . org-modern-mode)
-  (org-agenda-finalize . org-modern-agenda))
+		      :height 1.0))
 
 (use-package org-modern-indent
   :if (not (eq system-type 'android))
@@ -598,3 +620,11 @@ emacs still tries to pull the packages in even with it."
 
 (use-package-desktop! simple-httpd
   :straight t)
+
+;; Package integrations
+(with-eval-after-load 'org-modern
+  (with-eval-after-load 'mixed-pitch
+    (add-hook 'org-modern-mode-hook (lambda ()
+				      (add-to-list
+				       'mixed-pitch-fixed-pitch-faces
+				       'org-modern-date-inactive)))))

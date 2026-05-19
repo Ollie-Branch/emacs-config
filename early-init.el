@@ -4,3 +4,5 @@
 (setq read-process-output-max (* 1024 1024))
 (setenv "LSP_USE_PLISTS" "true")
 (setq lsp-use-plists t)
+(when (native-comp-available-p)
+  (setq native-comp-async-report-warnings-errors 'silent))
