@@ -135,7 +135,8 @@ emacs still tries to pull the packages in even with it."
   (dolist (mode '(org-mode-hook
 		  term-mode-hook
 		  eshell-mode-hook
-		  dashboard-mode-hook))
+		  dashboard-mode-hook
+		  pdf-view-mode))
     (add-hook mode (lambda () (display-line-numbers-mode -1))))
   ;; some weirdness with org-mode's time tracking trips check-parens
   ;; so I removed it. I would like to conditionally enable the hook,
@@ -533,6 +534,7 @@ emacs still tries to pull the packages in even with it."
 ;; visible
 (use-package-desktop! olivetti
   :straight t
+  :custom (olivetti-body-width 120)
   :hook (org-mode . olivetti-mode))
 
 (use-package-ensure! mixed-pitch
@@ -605,9 +607,8 @@ emacs still tries to pull the packages in even with it."
   (dashboard-set-heading-icons t)
   (dashboard-set-file-icons t)
   (dashboard-items '((projects . 5)
-		     (bookmarks . 5)
 		     (recents . 5)
-		     (agenda . 5)))
+		     (agenda . 12)))
   (dasboard-display-icons-p t)
   (dashboard-icon-type 'nerd-icons)
   (dashboard-set-heading-icons t)
