@@ -35,7 +35,9 @@
   (bootstrap-straight)
   (straight-use-package 'org))
 
-(load (concat (file-name-directory user-init-file) "config-locals.el"))
+(when (not (eq system-type 'android))
+  (load (concat (file-name-directory user-init-file)
+		"config-locals.el")))
 
 ;; functions & macros
 (defmacro use-package-ensure! (name &rest plist)
@@ -486,7 +488,8 @@ emacs still tries to pull the packages in even with it."
 (use-package-ensure! rainbow-delimiters
   :hook (prog-mode-hook . rainbow-delimiters-mode))
 
-(use-package-ensure! hl-todo
+(use-package-desktop! hl-todo
+  :straight t
   :config (global-hl-todo-mode))
 
 ;; editing ergonomics
@@ -565,8 +568,7 @@ emacs still tries to pull the packages in even with it."
   (set-face-attribute 'org-modern-label nil
 		      :height 1.0))
 
-(use-package org-modern-indent
-  :if (not (eq system-type 'android))
+(use-package-desktop! org-modern-indent
   :straight (org-modern-indent
 	     :type git
 	     :host github
