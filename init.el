@@ -132,7 +132,7 @@ emacs still tries to pull the packages in even with it."
   (global-auto-revert-mode 1)
   (global-visual-line-mode 1)
   (global-visual-wrap-prefix-mode 1)
-  (global-display-line-numbers-mode 1)
+  (display-line-numbers-mode 1)
   (repeat-mode 1)
   (dolist (mode '(org-mode-hook
 		  term-mode-hook
@@ -141,7 +141,7 @@ emacs still tries to pull the packages in even with it."
 		  pdf-view-mode))
     (add-hook mode (lambda () (display-line-numbers-mode -1))))
   ;; some weirdness with org-mode's time tracking trips check-parens
-  ;; so I removed it. I would like to conditionally enable the hook,
+/  ;; so I removed it. I would like to conditionally enable the hook,
   ;; but that's for a later time.
   ;; (add-hook 'before-save-hook 'check-parens)
   (add-hook 'prog-mode-hook 'display-fill-column-indicator-mode)
@@ -150,7 +150,8 @@ emacs still tries to pull the packages in even with it."
   (which-key-setup-minibuffer)
   (add-to-list 'display-buffer-alist
 	       '((or (derived-mode . Info-mode)
-		     (derived-mode . help-mode))
+		     (derived-mode . help-mode)
+		     (derived-mode . Man-mode))
 		 (display-buffer-in-side-window)
 		 (side . right)
 		 (body-function . (lambda (window)
@@ -180,10 +181,7 @@ emacs still tries to pull the packages in even with it."
 	(when (member "Source Sans Pro" (font-family-list))
 	  (set-face-attribute 'variable-pitch nil
 			      :family "Source Sans Pro"
-			      :height 120))
-	;; dashboard doesn't seem to be on melpa or elpa, or android
-	;; doesn't seem to pick them up for some reason
-	(setq initial-buffer-choice 'dashboard-open))
+			      :height 120)))
     (progn
       (setq use-dialog-box t	     
 	    tool-bar-position 'bottom)
@@ -233,7 +231,11 @@ emacs still tries to pull the packages in even with it."
   (org-refile-targets
    `(("archive.org" :maxlevel . 1)))
   :config
-  (advice-add 'org-refile :after 'org-save-all-org-buffers))
+  (advice-add 'org-refile :after 'org-save-all-org-buffers)
+  (add-to-list 'display-buffer-alist
+	       '("\\*Org Agenda\\*"
+		 (display-buffer-in-tab)
+		 (tab-name . "agenda"))))
 
 (use-package-builtin! dired
   :hook
@@ -603,6 +605,8 @@ emacs still tries to pull the packages in even with it."
 (use-package-desktop! dashboard
   :straight t
   :after (projectile)
+  :init
+  (setq initial-buffer-choice 'dashboard-open)
   :custom
   (dashboard-display-icons-p t)
   (dashboard-icon-type 'nerd-icons)
