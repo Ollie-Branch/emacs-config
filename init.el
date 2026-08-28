@@ -141,7 +141,7 @@ emacs still tries to pull the packages in even with it."
 		  pdf-view-mode))
     (add-hook mode (lambda () (display-line-numbers-mode -1))))
   ;; some weirdness with org-mode's time tracking trips check-parens
-/  ;; so I removed it. I would like to conditionally enable the hook,
+  ;; so I removed it. I would like to conditionally enable the hook,
   ;; but that's for a later time.
   ;; (add-hook 'before-save-hook 'check-parens)
   (add-hook 'prog-mode-hook 'display-fill-column-indicator-mode)
@@ -221,6 +221,28 @@ emacs still tries to pull the packages in even with it."
   (org-hide-leading-stars t)
   (org-pretty-entities t)
   (org-startup-indented t)
+  (org-agenda-span 9)
+  (org-agenda-start-on-weekday nil)
+  (org-agenda-start-day "-2d")
+  (org-agenda-skip-timestamp-if-done t)
+  (org-agenda-skip-deadline-if-done t)
+  (org-agenda-skip-scheduled-if-done t)
+  (org-agenda-skip-scheduled-if-deadline-is-shown t)
+  (org-agenda-skip-timestamp-if-deadline-is-shown t)
+  (org-agenda-time-grid '((daily) () "" ""))
+  (org-agenda-hide-tags-regexp ".*")
+  (org-agenda-prefix-format '((agenda . " %?-2i %b %t %s")
+                              (todo . " %i %-12:c")
+                              (tags . " %i %-12:c")
+                              (search . " %i %-12:c")))
+  (org-agenda-custom-commands
+   '(("d" "Daily Agenda"
+      ((agenda "" ((org-agenda-span 1)
+		   (org-agenda-start-on-weekday nil)
+		   (org-agenda-start-day "0d")
+                   (org-deadline-warning-days 7)))
+       (tags-todo "+PRIORITY=\"A\""
+                  ((org-agenda-overriding-header "High Priority Tasks")))))))
   (org-todo-keywords
    '((sequence "TODO(t)" "|" "DONE(d)")
      (sequence "PROJ(p)" "|" "DONE(d)" "CANCELLED(c)" "HIATUS(h)")
@@ -235,7 +257,16 @@ emacs still tries to pull the packages in even with it."
   (add-to-list 'display-buffer-alist
 	       '("\\*Org Agenda\\*"
 		 (display-buffer-in-tab)
-		 (tab-name . "agenda"))))
+		 (tab-name . "Agenda")))
+  (add-to-list 'display-buffer-alist
+	       '("\\*Agenda Commands\\*"
+		 (display-buffer-in-side-window)
+		 (side . bottom)))
+  (add-to-list 'display-buffer-alist
+	       '((derived-mode . org-mode)
+		(display-buffer-in-tab)
+		(tab-name . "Org")))
+  :bind (("C-c a" . org-agenda)))
 
 (use-package-builtin! dired
   :hook
@@ -272,44 +303,6 @@ emacs still tries to pull the packages in even with it."
   (load-theme 'modus-vivendi t))
 
 (use-package-builtin! tab-bar)
-
-;; This isn't technically builtin but you *must* install it through
-;; your distro's package manager because mu relies on the versions
-;; being the same
-(use-package-desktop! mu4e
-  :straight nil
-  :load-path "/usr/share/emacs/site-lisp/mu4e"
-  :commands (mu4e)
-  :custom
-  (mu4e-headers-open-after-move nil)
-  (mu4e-headers-advance-after-mark nil)
-  :config
-  (add-to-list 'display-buffer-alist
-	       '((derived-mode . mu4e-view-mode)
-		 (display-buffer-full-frame)))
-  (add-to-list 'display-buffer-alist
-	       '((derived-mode . mu4e-main-mode)
-		 (display-buffer-in-tab)
-		 (tab-name . "email")))
-  :custom
-  (mu4e-change-filenames-when-moving t)
-  ;; Refresh mail using isync every 10 minutes
-  (mu4e-update-interval (* 10 60))
-  (mu4e-get-mail-command "mbsync -a")
-  ;; maildir-personal is a variable you should set in another file
-  ;; named config-locals.el
-  (mu4e-maildir maildir-personal)
-  ;; These are assuming you're using gmail
-  (mu4e-drafts-folder "/[Gmail]/Drafts")
-  (mu4e-sent-folder   "/[Gmail]/Sent Mail")
-  (mu4e-refile-folder "/[Gmail]/All Mail")
-  (mu4e-trash-folder  "/[Gmail]/Trash")
-  (mu4e-maildir-shortcuts
-      '(("/Inbox"             . ?i)
-        ("/[Gmail]/Sent Mail" . ?s)
-        ("/[Gmail]/Trash"     . ?t)
-        ("/[Gmail]/Drafts"    . ?d)
-        ("/[Gmail]/All Mail"  . ?a))))
 
 ;; install new packages and config them
 (use-package-ensure! no-littering
@@ -540,7 +533,7 @@ emacs still tries to pull the packages in even with it."
 (use-package-desktop! olivetti
   :straight t
   :custom (olivetti-body-width 120)
-  :hook (org-mode . olivetti-mode))
+  :hook ((org-mode org-agenda-mode) . olivetti-mode))
 
 (use-package-ensure! mixed-pitch
   :hook
@@ -576,6 +569,20 @@ emacs still tries to pull the packages in even with it."
 	     :host github
 	     :repo "jdtsmith/org-modern-indent")
   :hook (org-mode . (lambda () (org-modern-indent-mode 90))))
+
+(use-package-ensure! org-super-agenda
+  :custom (org-super-agenda-groups
+           '((:name "! Overdue "
+		    :scheduled past
+		    :order 2
+		    :face 'error)
+             (:name "Habits"
+		    :tag "Habits"
+		    :order 3)
+	     (:name "Studies"
+		    :tag "Studies"
+		    :order 3)))
+  :hook (org-agenda-mode . org-super-agenda-mode))
 
 ;; configure dependency for doom-modeline
 (use-package-ensure! nerd-icons
