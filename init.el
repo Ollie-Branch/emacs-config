@@ -115,8 +115,6 @@ emacs still tries to pull the packages in even with it."
 ;; configure emacs
 (use-package-builtin! emacs
   :custom
-  (evil-want-keybinding nil)
-  (user-emacs-directory (concat agnostic-home-dir "/.cache/emacs/"))
   (use-short-answers t)
   (visible-bell t)
   (history-length 25)
@@ -134,6 +132,7 @@ emacs still tries to pull the packages in even with it."
   (global-visual-wrap-prefix-mode 1)
   (display-line-numbers-mode 1)
   (repeat-mode 1)
+  (toggle-debug-on-error)
   (dolist (mode '(org-mode-hook
 		  term-mode-hook
 		  eshell-mode-hook
@@ -162,11 +161,10 @@ emacs still tries to pull the packages in even with it."
 		 (side . left)))
   (if (not (eq system-type 'android))
       (progn
+	(setq evil-want-keybinding nil)
 	(setq scroll-conservatively 101	    	    
 	      use-dialog-box nil)
-	;; toggling debug on android with just a touchscreen is annoying
-	;; and the config is full of errors on android atm
-	(toggle-debug-on-error)
+	(setq user-emacs-directory "~/.cache/emacs/")
 	(make-directory "~/.cache/emacs" t)
 	(make-directory "~/.config/emacs/backups" t)
 	(setq backup-directory-alist
@@ -508,9 +506,18 @@ emacs still tries to pull the packages in even with it."
   :after (evil)
   :config (evil-collection-init))
 
-;; would probably rather use project.el but dashboard only supports projectile
-;; afaik
-(use-package-ensure! projectile
+;; would probably rather use project.el but dashboard only supports
+;; projectile afaik
+;; Desktop-only for now, it seems projectile breaks on android and I
+;; don't know why. Debug info says something about file expansion
+;; wildcards. When running this package on android you can't open a
+;; file in emacs from your android device's file manager (with
+;; material files at least). Needless to say that's a disastrous
+;; usability problem, and had to be rectified so I could use emacs
+;; on android. To be honest, this isn't the type of package you'd
+;; really run on an android device anyway so this is fine.
+(use-package-desktop! projectile
+  :straight t
   :config
   (projectile-mode 1)
   (define-key projectile-mode-map (kbd "C-c p") 'projectile-command-map))
