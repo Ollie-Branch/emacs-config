@@ -1,3 +1,4 @@
+;; -*- lexical-binding: t; -*-
 ;; TODO Use display-buffer-alist to increase the ergonomics of helpful
 ;;   and info buffers
 ;; TODO Use tab-line to group help buffers in a single window, and
