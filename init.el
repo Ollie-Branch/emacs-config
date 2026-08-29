@@ -187,9 +187,10 @@ emacs still tries to pull the packages in even with it."
       ;; initialize use-package on android
       (require 'package)
       (package-initialize)
-      (add-to-list 'package-archives
-		   '("elpa" . "https://elpa.gnu.org/packages/")
-		   '("melpa" . "https://melpa.org/packages/"))))
+      (dolist (package-sources
+	       '(("elpa" . "https://elpa.gnu.org/packages/")
+		 ("melpa" . "https://melpa.org/packages/")))
+	(add-to-list 'package-archives package-sources))))
   :bind
   (("C-x C-b" . ibuffer)
    ("C-c w l" . windmove-right)
