@@ -36,10 +36,6 @@
   (bootstrap-straight)
   (straight-use-package 'org))
 
-(when (not (eq system-type 'android))
-  (load (concat (file-name-directory user-init-file)
-		"config-locals.el")))
-
 ;; functions & macros
 (defmacro use-package-ensure! (name &rest plist)
   "Declares and configures a package, while ensuring it's installed.
@@ -184,6 +180,7 @@ emacs still tries to pull the packages in even with it."
     (progn
       (setq use-dialog-box t	     
 	    tool-bar-position 'bottom)
+      (setq use-file-dialog t)
       (modifier-bar-mode 1)
       ;; initialize use-package on android
       (require 'package)
@@ -692,3 +689,7 @@ emacs still tries to pull the packages in even with it."
 				      (add-to-list
 				       'mixed-pitch-fixed-pitch-faces
 				       'org-modern-date-inactive)))))
+
+(when (not (eq system-type 'android))
+  (load (concat (file-name-directory user-init-file)
+		"config-private.el")))

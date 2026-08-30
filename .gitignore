@@ -15,4 +15,5 @@ etc/
 var/
 projectile-bookmarks.eld
 config-locals.el
+config-private.el
 
