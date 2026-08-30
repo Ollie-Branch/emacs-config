@@ -263,7 +263,8 @@ emacs still tries to pull the packages in even with it."
 	       '((derived-mode . org-mode)
 		(display-buffer-in-tab)
 		(tab-name . "Org")))
-  :bind (("C-c a" . org-agenda)))
+  :bind (("C-c a" . org-agenda)
+	 ("C-c c" . org-capture)))
 
 (use-package-builtin! dired
   :hook
@@ -299,7 +300,8 @@ emacs still tries to pull the packages in even with it."
   :config
   (load-theme 'modus-vivendi t))
 
-(use-package-builtin! tab-bar)
+(use-package-builtin! tab-bar
+  :bind (("C-x t s" . "tab-bar-switch-to-tab")))
 
 ;; install new packages and config them
 (use-package-ensure! no-littering
