@@ -665,6 +665,11 @@ emacs still tries to pull the packages in even with it."
 
 (use-package-desktop! magit
   :straight t
+  :init
+  (add-to-list 'display-buffer-alist
+	       '((derived-mode . magit-mode)
+		(display-buffer-in-tab)
+		(tab-name . "Magit")))
   :bind
   ("C-x g" . magit-status)
   :custom
