@@ -296,9 +296,32 @@ emacs still tries to pull the packages in even with it."
      (4 . (variable-pitch regular 1.2))
      (agenda-date . (1.3))
      (agenda-structure . (variable-pitch light 1.4))
-     (t . (1.0))))
+     (t . (1.0)))))
+
+(use-package-ensure! ef-themes
+  :init
+  ;; This makes the Modus commands listed below consider only the Ef
+  ;; themes.  For an alternative that includes Modus and all
+  ;; derivative themes (like Ef), enable the
+  ;; `modus-themes-include-derivatives-mode' instead.  The manual of
+  ;; the Ef themes has a section that explains all the possibilities:
+  ;;
+  ;; - Evaluate `(info "(ef-themes) Working with other Modus themes or taking over Modus")'
+  ;; - Visit <https://protesilaos.com/emacs/ef-themes#h:6585235a-5219-4f78-9dd5-6a64d87d1b6e>
+  (ef-themes-take-over-modus-themes-mode 1)
+  :bind
+  (("<f5>" . modus-themes-rotate)
+   ("C-<f5>" . modus-themes-select)
+   ("M-<f5>" . modus-themes-load-random))
   :config
-  (load-theme 'modus-vivendi t))
+  ;; All customisations here.
+  (setq modus-themes-mixed-fonts t)
+  (setq modus-themes-italic-constructs t)
+
+  ;; Finally, load your theme of choice (or a random one with
+  ;; `modus-themes-load-random', `modus-themes-load-random-dark',
+  ;; `modus-themes-load-random-light').
+  (modus-themes-load-theme 'ef-owl))
 
 (use-package-builtin! tab-bar
   :bind (("C-x t s" . "tab-bar-switch-to-tab")))
@@ -459,13 +482,14 @@ emacs still tries to pull the packages in even with it."
    consult-source-recent-file consult-source-project-recent-file
    ;; :preview-key "m-."
    :preview-key '(:debounce 0.4 any))
-  ;; optionally configure the narrowing key.
-  ;; both < and c-+ work reasonably well.
-  (setq consult-narrow-key "<") ;; "c-+"
   ;; optionally make narrowing help available in the minibuffer.
   ;; you may want to use `embark-prefix-help-command' or which-key instead.
   ;; (keymap-set consult-narrow-map (concat consult-narrow-key " ?") #'consult-narrow-help)
-  )
+
+  ;; optionally configure the narrowing key.
+  ;; both < and c-+ work reasonably well.
+  ;; "c-+"
+  (setq consult-narrow-key "<"))
 
 (use-package-ensure! marginalia
   :bind (:map minibuffer-local-map
