@@ -45,7 +45,7 @@ packages without control flow being embedded around every
 `use-package' call and creating a ton of copy-pasted code that's hard
 to maintain.
 
-name is the name of the package, and the plist is the property list
+NAME is the name of the package, and the plist is the property list
 (:prelude (), :init (), :config (), :hook (), etc.)
 
 this code assumes you have already set (straight-use-package
@@ -140,6 +140,7 @@ emacs still tries to pull the packages in even with it."
   (vc-find-revision-no-save t)
   (vc-follow-link t)
   (mouse-drag-mode-line t)
+  (cursor-type 'bar)
   :config
   (repeat-mode 1)
   (editorconfig-mode 1)
@@ -167,6 +168,10 @@ emacs still tries to pull the packages in even with it."
 		 (body-function . (lambda (window)
 				    (select-window window)))))
   (add-to-list 'display-buffer-alist
+	       '((derived-mode . messages-buffer-mode)
+		(display-buffer-in-tab)
+		(tab-name . "Messages")))
+  (add-to-list 'display-buffer-alist
 	       '((derived-mode . dired-mode)
 		 (display-buffer-in-side-window)
 		 (side . left)))
@@ -181,16 +186,7 @@ emacs still tries to pull the packages in even with it."
 	(setq backup-directory-alist
 	      '(("." . "~/.config/emacs/backups")))
 	(tool-bar-mode -1)
-	(scroll-bar-mode -1)
-	(when (member "FantasqueSansM Nerd Font Mono" (font-family-list))
-	  (set-face-attribute 'default nil
-			      :family "FantasqueSansM Nerd Font Mono"
-			      :height 120
-			      :weight 'regular))
-	(when (member "Source Sans Pro" (font-family-list))
-	  (set-face-attribute 'variable-pitch nil
-			      :family "Source Sans Pro"
-			      :height 120)))
+	(scroll-bar-mode -1))
     (progn
       (setq use-dialog-box t	     
 	    tool-bar-position 'bottom)
