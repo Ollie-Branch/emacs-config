@@ -109,6 +109,12 @@ emacs still tries to pull the packages in even with it."
     (setq agnostic-home-dir "/storage/emulated/0")
   (setq agnostic-home-dir "~"))
 
+(defun check-parens-lisp ()
+    (when (or (equal major-mode 'lisp-data-mode)
+	      (equal major-mode 'lisp-mode)
+	      (equal major-mode 'emacs-lisp-mode))
+      (check-parens)))
+
 ;; configure emacs
 (use-package-builtin! emacs
   :custom
@@ -121,26 +127,34 @@ emacs still tries to pull the packages in even with it."
   (enable-recursive-minibuffers t)
   (minibuffer-prompt-properties
    '(read-only t cursor-intangible t face minibuffer-prompt))
+  (save-interprogram-paste-before-kill t)
+  (imenu-auto-rescan t)
+  (font-use-system-font t)
+  (frame-resize-pixelwise t)
+  (window-resize-pixelwise t)
+  (frame-inhibit-implied-resize t)
+  (mode-line-compact 'long)
+  (shell-command-prompt-show-cwd t)
+  (mouse-drag-and-drop-region t)
+  (mouse-drag-and-drop-region-cross-program t)
+  (vc-find-revision-no-save t)
+  (vc-follow-link t)
+  (mouse-drag-mode-line t)
   :config
-  (savehist-mode 1)
+  (repeat-mode 1)
+  (editorconfig-mode 1)
+  (delete-selection-mode 1)
+  (etags-regen-mode 1)
+  ;; I don't have emacs 31 yet :(
+  ;;(vc-auto-revert-mode 1)
+  ;;(global-xref-mouse-mode 1)
   (save-place-mode 1)
+  (savehist-mode 1)
+  (pixel-scroll-mode 1)
   (global-auto-revert-mode 1)
   (global-visual-line-mode 1)
   (global-visual-wrap-prefix-mode 1)
-  (display-line-numbers-mode 1)
-  (repeat-mode 1)
   (toggle-debug-on-error)
-  (dolist (mode '(org-mode-hook
-		  term-mode-hook
-		  eshell-mode-hook
-		  dashboard-mode-hook
-		  pdf-view-mode))
-    (add-hook mode (lambda () (display-line-numbers-mode -1))))
-  ;; some weirdness with org-mode's time tracking trips check-parens
-  ;; so I removed it. I would like to conditionally enable the hook,
-  ;; but that's for a later time.
-  ;; (add-hook 'before-save-hook 'check-parens)
-  (add-hook 'prog-mode-hook 'display-fill-column-indicator-mode)
   (recentf-mode 1)
   (which-key-mode 1)
   (which-key-setup-minibuffer)
@@ -266,9 +280,40 @@ emacs still tries to pull the packages in even with it."
   :bind (("C-c a" . org-agenda)
 	 ("C-c c" . org-capture)))
 
+;; Using the package helpful, you can find the metapackages by loading
+;; a symbol with helpful (in this config, it's the normal help
+;; keybinds or `C-h C-d' when hovering over a symbol), then navigating
+;; to the file the symbol comes from and searching for "provide '". In
+;; the case of files it was "(provide 'files)". I started the search
+;; for the "files" metapackage while looking at the helpful entry for
+;; "before-save-hook"
+(use-package-builtin! files
+  :hook
+  (before-save . check-parens-lisp))
+
 (use-package-builtin! dired
+  :custom
+  (dired-auto-revert-buffer t)
+  (dired-mouse-drag-files t)
   :hook
   (dired-mode . dired-hide-details-mode))
+
+(use-package-builtin! display-line-numbers
+  :hook
+  (prog-mode . display-line-numbers-mode))
+
+(use-package-builtin! display-fill-column-indicator
+  :hook
+  (prog-mode . display-fill-column-indicator-mode))
+
+(use-package-builtin! flymake
+  :hook
+  (prog-mode . flymake-mode))
+
+(use-package-builtin! flyspell
+  :hook
+  (text-mode . flyspell-mode)
+  (prog-mode . flyspell-prog-mode))
 
 (use-package-builtin! eshell
   :commands (eshell)
@@ -277,6 +322,16 @@ emacs still tries to pull the packages in even with it."
 	       '("\\*eshell\\*"
 		 (display-buffer-in-side-window)
 		 (side . bottom))))
+
+(use-package-builtin! compile
+  :custom
+  (compilation-scroll-output 'first-error))
+
+(use-package-builtin! tab-bar
+  :custom
+  (tab-bar-history-mode t)
+  :bind (("C-x t s" . "tab-bar-switch-to-tab")))
+
 
 (use-package-ensure! modus-themes
   :custom
@@ -323,8 +378,6 @@ emacs still tries to pull the packages in even with it."
   ;; `modus-themes-load-random-light').
   (modus-themes-load-theme 'ef-owl))
 
-(use-package-builtin! tab-bar
-  :bind (("C-x t s" . "tab-bar-switch-to-tab")))
 
 ;; install new packages and config them
 (use-package-ensure! no-littering
@@ -705,6 +758,12 @@ emacs still tries to pull the packages in even with it."
   :straight t
   :magic ("%PDF" . pdf-view-mode)
   :config (pdf-tools-install :no-query))
+
+;; (use-package-builtin! eglot
+;;   :hook
+;;   (java-mode . eglot-ensure)
+;;   :config
+;;   (add-to-list 'eglot-server-programs))
 
 (use-package-desktop! dap-mode
   :straight t
