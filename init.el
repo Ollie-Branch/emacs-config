@@ -572,17 +572,17 @@ emacs still tries to pull the packages in even with it."
 
 (use-package-ensure! yasnippet-snippets)
 
-(use-package-desktop! evil
-  :straight t
-  :config
-  (evil-mode 1)
-  (define-key evil-normal-state-map (kbd "j") 'evil-next-visual-line)
-  (define-key evil-normal-state-map (kbd "k") 'evil-previous-visual-line))
+;; (use-package-desktop! evil
+;;   :straight t
+;;   :config
+;;   (evil-mode 1)
+;;   (define-key evil-normal-state-map (kbd "j") 'evil-next-visual-line)
+;;   (define-key evil-normal-state-map (kbd "k") 'evil-previous-visual-line))
 
-(use-package-desktop! evil-collection
-  :straight t
-  :after (evil)
-  :config (evil-collection-init))
+;; (use-package-desktop! evil-collection
+;;   :straight t
+;;   :after (evil)
+;;   :config (evil-collection-init))
 
 ;; would probably rather use project.el but dashboard only supports
 ;; projectile afaik
