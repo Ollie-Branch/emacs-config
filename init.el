@@ -248,8 +248,8 @@ emacs still tries to pull the packages in even with it."
 		   (org-agenda-start-on-weekday nil)
 		   (org-agenda-start-day "0d")
                    (org-deadline-warning-days 7)))
-       (tags-todo "+PRIORITY=\"A\""
-                  ((org-agenda-overriding-header "High Priority Tasks")))))))
+       (tags-todo "personal/+PRIORITY=\"A\""
+                  ((org-agenda-overriding-header "Personal Kanban")))))))
   (org-todo-keywords
    '((sequence "TODO(t)" "|" "DONE(d)")
      (sequence "PROJ(p)" "|" "DONE(d)" "CANCELLED(c)" "HIATUS(h)")
