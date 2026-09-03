@@ -412,7 +412,7 @@ emacs still tries to pull the packages in even with it."
 ;; context windows with keyboard shortcuts
 (use-package-ensure! embark
   :bind
-  (("C-," . embark-act)         ;; pick some comfortable binding
+  (("C-c e" . embark-act)         ;; pick some comfortable binding
    ("C-;" . embark-dwim)        ;; good alternative: m-.
    ("C-h b" . embark-bindings)  ;; alternative for `describe-bindings'
    :map embark-symbol-map
