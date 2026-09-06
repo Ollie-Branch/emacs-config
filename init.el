@@ -145,7 +145,6 @@ emacs still tries to pull the packages in even with it."
   (repeat-mode 1)
   (editorconfig-mode 1)
   (delete-selection-mode 1)
-  (etags-regen-mode 1)
   ;; I don't have emacs 31 yet :(
   ;;(vc-auto-revert-mode 1)
   ;;(global-xref-mouse-mode 1)
@@ -205,7 +204,9 @@ emacs still tries to pull the packages in even with it."
    ("C-c w k" . windmove-up)
    ("C-c w j" . windmove-down)
    ("C-c w h" . windmove-left)
-   ("C-h k"   . describe-keymap)))
+   ("C-h k"   . describe-keymap)
+   ("C-="     . text-scale-increase)
+   ("C--"     . text-scale-decrease)))
 
 ;; config of pre-installed emacs packages
 (use-package-builtin! org
@@ -228,6 +229,7 @@ emacs still tries to pull the packages in even with it."
   (org-hide-leading-stars t)
   (org-pretty-entities t)
   (org-startup-indented t)
+  (org-return-follows-link t)
   (org-agenda-span 9)
   (org-agenda-start-on-weekday nil)
   (org-agenda-start-day "-2d")
@@ -413,7 +415,7 @@ emacs still tries to pull the packages in even with it."
 (use-package-ensure! embark
   :bind
   (("C-c e" . embark-act)         ;; pick some comfortable binding
-   ("C-;" . embark-dwim)        ;; good alternative: m-.
+   ("C-c d" . embark-dwim)        ;; good alternative: m-.
    ("C-h b" . embark-bindings)  ;; alternative for `describe-bindings'
    :map embark-symbol-map
    ("h" . helpful-symbol)
@@ -555,8 +557,7 @@ emacs still tries to pull the packages in even with it."
 (use-package-ensure! rainbow-delimiters
   :hook (prog-mode-hook . rainbow-delimiters-mode))
 
-(use-package-desktop! hl-todo
-  :straight t
+(use-package-ensure! hl-todo
   :config (global-hl-todo-mode))
 
 ;; editing ergonomics
@@ -609,8 +610,7 @@ emacs still tries to pull the packages in even with it."
 (use-package-ensure! org-fragtog
   :hook (org-mode . org-fragtog-mode))
 
-;; Centered editing of org documents, when no other windows are
-;; visible
+;; Centered display of org documents
 (use-package-desktop! olivetti
   :straight t
   :custom (olivetti-body-width 120)
@@ -620,6 +620,10 @@ emacs still tries to pull the packages in even with it."
   :hook
   (org-mode))
 
+;; * TODO look into why org-modern doesn't work on android. Enabling
+;; the mode leads to unicode error characters so maybe org-modern is
+;; detecting that and not allowing itself to be enabled. How do you
+;; change fonts on android then?
 (use-package-ensure! org-modern
   :defer t
   :after (mixed-pitch)
@@ -716,7 +720,8 @@ emacs still tries to pull the packages in even with it."
   (dashboard-startup-banner (cons "~/.config/emacs/splash/emacs-logo.png" "~/.config/emacs/splash/emacs-logo.txt"))
   :config (dashboard-setup-startup-hook))
 
-(use-package-ensure! doom-modeline
+(use-package-desktop! doom-modeline
+  :straight t
   :custom
   (doom-modeline-spc-face-overrides
    (list :family (face-attribute 'fixed-pitch :family)))
@@ -755,15 +760,13 @@ emacs still tries to pull the packages in even with it."
   :magic ("%PDF" . pdf-view-mode)
   :config (pdf-tools-install :no-query))
 
-;; (use-package-builtin! eglot
-;;   :hook
-;;   (java-mode . eglot-ensure)
-;;   :config
-;;   (add-to-list 'eglot-server-programs))
-
 (use-package-desktop! dap-mode
   :straight t
   :hook (prog-mode))
+
+;; some web dev packages
+(use-package-desktop! htmlize
+  :straight t)
 
 (use-package-desktop! simple-httpd
   :straight t)
