@@ -170,10 +170,6 @@ emacs still tries to pull the packages in even with it."
 	       '((derived-mode . messages-buffer-mode)
 		(display-buffer-in-tab)
 		(tab-name . "Messages")))
-  (add-to-list 'display-buffer-alist
-	       '((derived-mode . dired-mode)
-		 (display-buffer-in-side-window)
-		 (side . left)))
   (if (not (eq system-type 'android))
       (progn
 	(setq evil-want-keybinding nil)
@@ -293,8 +289,20 @@ emacs still tries to pull the packages in even with it."
   :custom
   (dired-auto-revert-buffer t)
   (dired-mouse-drag-files t)
+  :config
+  (add-to-list 'display-buffer-alist
+	       '((derived-mode . dired-mode)
+		 (display-buffer-in-tab)
+		 (tab-name . "Files")))
   :hook
   (dired-mode . dired-hide-details-mode))
+
+;; config for speedbar (emacs 31+)
+(use-package-builtin! speedbar
+  :if (> emacs-major-version 30)
+  :custom
+  (speedbar-prefer-window t)
+  (speedbar-use-images nil))
 
 (use-package-builtin! display-line-numbers
   :hook
@@ -313,6 +321,13 @@ emacs still tries to pull the packages in even with it."
   (text-mode . flyspell-mode)
   (prog-mode . flyspell-prog-mode))
 
+(use-package-builtin! prog-mode
+  :init
+  (add-to-list 'display-buffer-alist
+	       '((derived-mode . prog-mode)
+		(display-buffer-in-tab)
+		(tab-name . "Programming"))))
+
 (use-package-builtin! eshell
   :commands (eshell)
   :init
@@ -329,7 +344,6 @@ emacs still tries to pull the packages in even with it."
   :custom
   (tab-bar-history-mode t)
   :bind (("C-x t s" . "tab-bar-switch-to-tab")))
-
 
 (use-package-ensure! modus-themes
   :custom
@@ -362,19 +376,32 @@ emacs still tries to pull the packages in even with it."
   ;; - Evaluate `(info "(ef-themes) Working with other Modus themes or taking over Modus")'
   ;; - Visit <https://protesilaos.com/emacs/ef-themes#h:6585235a-5219-4f78-9dd5-6a64d87d1b6e>
   (ef-themes-take-over-modus-themes-mode 1)
-  :bind
-  (("<f5>" . modus-themes-rotate)
-   ("C-<f5>" . modus-themes-select)
-   ("M-<f5>" . modus-themes-load-random))
-  :config
-  ;; All customisations here.
+  :custom
+  ;; All customization here.
   (setq modus-themes-mixed-fonts t)
   (setq modus-themes-italic-constructs t)
-
+  :config
   ;; Finally, load your theme of choice (or a random one with
   ;; `modus-themes-load-random', `modus-themes-load-random-dark',
   ;; `modus-themes-load-random-light').
   (modus-themes-load-theme 'ef-owl))
+
+(use-package-desktop! modus-zenburn
+  :straight (modus-zenburn
+	     :type git
+	     :host github
+	     :repo "kiennq/modus-zenburn")
+  :custom
+  (modus-themes-bold-constructs t)
+  :config
+  (modus-themes-load-theme 'modus-zenburn))
+
+(use-package-desktop! auto-dark
+  :straight t
+  :custom
+  (auto-dark-themes '((modus-zenburn) (modus-zenburn-light)))
+  :config
+  (auto-dark-mode))
 
 
 ;; install new packages and config them
@@ -648,6 +675,7 @@ emacs still tries to pull the packages in even with it."
   (set-face-attribute 'org-modern-label nil
 		      :height 1.0))
 
+
 (use-package-desktop! org-modern-indent
   :straight (org-modern-indent
 	     :type git
@@ -736,6 +764,15 @@ emacs still tries to pull the packages in even with it."
   :straight t
   :hook (dired-mode . nerd-icons-dired-mode))
 
+(use-package-desktop! nerd-icons-speedbar
+  :straight (nerd-icons-speedbar
+	     :type git
+	     :host github
+	     :repo "Akane-6730/nerd-icons-speedbar")
+  :after (speedbar)
+  :custom
+  (nerd-icons-speedbar-mode 1))
+
 ;; format specific major modes
 (use-package-ensure! markdown-mode
   :mode ("README\\.md\\'" . gfm-mode)
@@ -782,3 +819,4 @@ emacs still tries to pull the packages in even with it."
 (when (not (eq system-type 'android))
   (load (concat (file-name-directory user-init-file)
 		"config-private.el")))
+(put 'dired-find-alternate-file 'disabled nil)
