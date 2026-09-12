@@ -386,6 +386,77 @@ parent directory created."
   :hook
   (prog-mode . display-fill-column-indicator-mode))
 
+(use-package-builtin! prog-mode
+  :init
+  (add-to-list 'display-buffer-alist
+	       '((derived-mode . prog-mode)
+		(display-buffer-in-tab)
+		(tab-name . "Programming"))))
+
+;; Inspired by: 
+;; [[https://www.masteringemacs.org/article/how-to-get-started-tree-sitter]]
+(use-package-builtin! treesit
+  :custom
+  (treesit-language-source-alist
+   '((bash . ("https://github.com/tree-sitter/tree-sitter-bash/"
+	      "v0.25.0"))
+     (cmake . ("https://github.com/uyha/tree-sitter-cmake"
+	       "v0.7.0"))
+     (css . ("https://github.com/tree-sitter/tree-sitter-css"
+	     "v0.25.0"))
+     (elisp . ("https://github.com/Wilfred/tree-sitter-elisp"
+	       "1.6.0"))
+     (go . ("https://github.com/tree-sitter/tree-sitter-go"
+	    "v0.25.0"))
+     (html . ("https://github.com/tree-sitter/tree-sitter-html"
+	      "v0.23.2"))
+     (javascript . ("https://github.com/tree-sitter/tree-sitter-javascript"
+		    "v0.25.0" "src"))
+     (json . ("https://github.com/tree-sitter/tree-sitter-json"
+	      "v0.24.8"))
+     (make . ("https://github.com/alemuller/tree-sitter-make"))
+     (markdown . ("https://github.com/ikatyang/tree-sitter-markdown"
+		  "v0.7.1"))
+     (python . ("https://github.com/tree-sitter/tree-sitter-python"
+		"v0.25.0"))
+     (toml . ("https://github.com/tree-sitter/tree-sitter-toml"
+	      "v0.5.1"))
+     (tsx . ("https://github.com/tree-sitter/tree-sitter-typescript"
+	     "v0.23.2" "tsx/src"))
+     (typescript . ("https://github.com/tree-sitter/tree-sitter-typescript"
+		    "v0.23.2" "typescript/src"))
+     (yaml . ("https://github.com/ikatyang/tree-sitter-yaml"
+	      "v0.5.0"))
+     (java . ("https://github.com/tree-sitter/java-tree-sitter/"
+	      "v0.25.0"))
+     (c . ("https://github.com/tree-sitter/tree-sitter-c"
+	   "v0.24.2"))
+     (c++ . ("https://github.com/tree-sitter/tree-sitter-cpp"
+	     "v0.23.4"))))
+  (major-mode-remap-alist
+   '((yaml-mode . yaml-ts-mode)
+     (bash-mode . bash-ts-mode)
+     (js2-mode . js-ts-mode)
+     (typescript-mode . typescript-ts-mode)
+     (json-mode . json-ts-mode)
+     (css-mode . css-ts-mode)
+     (python-mode . python-ts-mode)
+     (go-mode . go-ts-mode)
+     (html-mode . html-ts-mode)
+     (toml-mode . toml-ts-mode)
+     (c-mode . c-ts-mode)
+     (java-mode . java-ts-mode))))
+;; evaluate (M-:) the code below to download and compile all of the
+;; tree sitter grammars defined above:
+;; (mapc #'treesit-install-language-grammar (mapcar #'car treesit-language-source-alist))
+
+(use-package-builtin! eglot
+  :config
+  (add-to-list 'eglot-server-programs
+	       '(java-ts-mode . ("jdtls" "-configuration $HOME/.config/jdtls/ -data $(pwd) --stdio")))
+  :hook
+  (java-ts-mode . eglot-ensure))
+
 (use-package-builtin! flymake
   :hook
   (prog-mode . flymake-mode))
@@ -394,13 +465,6 @@ parent directory created."
   :hook
   (text-mode . flyspell-mode)
   (prog-mode . flyspell-prog-mode))
-
-(use-package-builtin! prog-mode
-  :init
-  (add-to-list 'display-buffer-alist
-	       '((derived-mode . prog-mode)
-		(display-buffer-in-tab)
-		(tab-name . "Programming"))))
 
 (use-package-builtin! eshell
   :commands (eshell)

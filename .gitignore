@@ -13,6 +13,9 @@ backups/
 transient/
 etc/
 var/
+tree-sitter/
+.tutor/
+TAGS
 projectile-bookmarks.eld
 config-locals.el
 config-private.el
