@@ -99,6 +99,64 @@ emacs still tries to pull the packages in even with it."
     (insert-file-contents filepath)
     (buffer-string)))
 
+;; code taken from:
+;; [[https://rahuljuliato.com/posts/emacs-cache-paths]]
+(defcustom my/cache-directory
+  (expand-file-name "cache/" user-emacs-directory)
+  "Base directory for Emacs cache files.
+All entries in `my/cache-paths' are resolved relative to this
+directory.  Choose one of the presets or supply any custom path.
+Changes take effect after restarting Emacs."
+  :type `(choice
+	  (const     :tag "Inside Emacs config  (cache/ in user-emacs-directory)"
+		     ,(expand-file-name "cache/" user-emacs-directory))
+	  (const     :tag "System temp          (/tmp/emacs-cache/)" "/tmp/emacs-cache/")
+	  (directory :tag "Custom directory"))
+  :group 'my)
+
+(defvar my/cache-paths
+  '(;; Files:
+	(bookmark-file               . "bookmarks")
+	(ielm-history-file-name      . "ielm-history.eld")
+	(project-list-file           . "projects")
+	(recentf-save-file           . "recentf")
+	(savehist-file               . "history")
+	(save-place-file             . "saveplace")
+	(transient-history-file      . "transient/history.el")
+	(transient-levels-file       . "transient/levels.el")
+	(transient-values-file       . "transient/values.el")
+	(tramp-persistency-file-name . "tramp")
+	(nsm-settings-file           . "network-security.data")
+	;; Directories:
+	(auto-saves                  . "auto-saves/")
+	(auto-saves-sessions         . "auto-saves/sessions/")
+	(multisession-directory      . "multisession/")
+	(url-configuration-directory . "url/")
+	(image-dired-dir             . "image-dired/")
+	(erc-log-channels-directory  . "erc/logs/")
+	(erc-image-cache-directory   . "erc/images/")
+	(rcirc-log-directory         . "rcirc/logs/")))
+
+(defun my/cache--path (key)
+  "Return the absolute path for KEY in `my/cache-paths'."
+  (let ((rel (cdr (assq key my/cache-paths))))
+	(unless rel
+	  (error "my/cache--path: Unknown key %S" key))
+	(expand-file-name rel my/cache-directory)))
+
+(defun my/cache--ensure-dirs ()
+  "Create every directory referenced by `my/cache-paths'.
+Entries ending in `/' are created directly; other entries have their
+parent directory created."
+  (dolist (entry my/cache-paths)
+	(let* ((abs (my/cache--path (car entry)))
+		   (dir (if (directory-name-p abs)
+					abs
+				  (file-name-directory abs))))
+	  (make-directory dir t))))
+
+(my/cache--ensure-dirs)
+
 ;; alongside other problems caused by android, we have to make sure the home
 ;; directory for the rest of our config actually points to the files on both
 ;; desktop and mobile. android's general home folder is stored at
@@ -141,6 +199,26 @@ emacs still tries to pull the packages in even with it."
   (vc-follow-link t)
   (mouse-drag-mode-line t)
   (cursor-type 'bar)
+  (bookmark-file              (my/cache--path 'bookmark-file))
+  (ielm-history-file-name     (my/cache--path 'ielm-history-file-name))
+  (project-list-file          (my/cache--path 'project-list-file))
+  (recentf-save-file          (my/cache--path 'recentf-save-file))
+  (savehist-file              (my/cache--path 'savehist-file))
+  (save-place-file            (my/cache--path 'save-place-file))
+  (transient-history-file     (my/cache--path 'transient-history-file))
+  (transient-levels-file      (my/cache--path 'transient-levels-file))
+  (transient-values-file      (my/cache--path 'transient-values-file))
+  (nsm-settings-file          (my/cache--path 'nsm-settings-file))
+  (multisession-directory     (my/cache--path 'multisession-directory))
+  (url-configuration-directory (my/cache--path 'url-configuration-directory))
+  ;; The two below are *not* backups; they keep auto-save state
+  ;; without scattering `#file#' next to every edited buffer.
+  (create-lockfiles  nil)   ; no `.#file' lock files at all
+  (make-backup-files nil)   ; no `file~' tilde backups at all
+  (auto-save-default t)    ; auto-save *is* kept, just redirected below
+  (auto-save-list-file-prefix (my/cache--path 'auto-saves-sessions))
+  (auto-save-file-name-transforms
+	  `((".*" ,(my/cache--path 'auto-saves) t)))
   :config
   (repeat-mode 1)
   (editorconfig-mode 1)
@@ -150,7 +228,8 @@ emacs still tries to pull the packages in even with it."
   ;;(global-xref-mouse-mode 1)
   (save-place-mode 1)
   (savehist-mode 1)
-  (pixel-scroll-mode 1)
+  ;; This is too slow on emacs 30 so it's disabled for now
+  ;; (pixel-scroll-mode 1)
   (global-auto-revert-mode 1)
   (global-visual-line-mode 1)
   (global-visual-wrap-prefix-mode 1)
@@ -175,11 +254,6 @@ emacs still tries to pull the packages in even with it."
 	(setq evil-want-keybinding nil)
 	(setq scroll-conservatively 101	    	    
 	      use-dialog-box nil)
-	(setq user-emacs-directory "~/.cache/emacs/")
-	(make-directory "~/.cache/emacs" t)
-	(make-directory "~/.config/emacs/backups" t)
-	(setq backup-directory-alist
-	      '(("." . "~/.config/emacs/backups")))
 	(tool-bar-mode -1)
 	(scroll-bar-mode -1))
     (progn
@@ -403,7 +477,6 @@ emacs still tries to pull the packages in even with it."
   :config
   (auto-dark-mode))
 
-
 ;; install new packages and config them
 (use-package-ensure! no-littering
   :demand t)
@@ -596,34 +669,6 @@ emacs still tries to pull the packages in even with it."
 
 (use-package-ensure! yasnippet-snippets)
 
-;; (use-package-desktop! evil
-;;   :straight t
-;;   :config
-;;   (evil-mode 1)
-;;   (define-key evil-normal-state-map (kbd "j") 'evil-next-visual-line)
-;;   (define-key evil-normal-state-map (kbd "k") 'evil-previous-visual-line))
-
-;; (use-package-desktop! evil-collection
-;;   :straight t
-;;   :after (evil)
-;;   :config (evil-collection-init))
-
-;; would probably rather use project.el but dashboard only supports
-;; projectile afaik
-;; Desktop-only for now, it seems projectile breaks on android and I
-;; don't know why. Debug info says something about file expansion
-;; wildcards. When running this package on android you can't open a
-;; file in emacs from your android device's file manager (with
-;; material files at least). Needless to say that's a disastrous
-;; usability problem, and had to be rectified so I could use emacs
-;; on android. To be honest, this isn't the type of package you'd
-;; really run on an android device anyway so this is fine.
-(use-package-desktop! projectile
-  :straight t
-  :config
-  (projectile-mode 1)
-  (define-key projectile-mode-map (kbd "C-c p") 'projectile-command-map))
-
 (use-package-ensure! smartparens
   :config
   (require 'smartparens-config)
@@ -715,6 +760,7 @@ emacs still tries to pull the packages in even with it."
       :header-line-width 4
       :mode-line-width 6
       :custom-button-width 3
+
       :tab-width 4
       :right-divider-width 30
       :scroll-bar-width 8
@@ -722,9 +768,7 @@ emacs still tries to pull the packages in even with it."
   :config
   (spacious-padding-mode 1))
 
-(use-package-desktop! dashboard
-  :straight t
-  :after (projectile)
+(use-package-ensure! dashboard
   :init
   (setq initial-buffer-choice 'dashboard-open)
   :custom
@@ -743,10 +787,18 @@ emacs still tries to pull the packages in even with it."
   (dashboard-page-separator "\n\f\n")
   (dashboard-image-banner-max-height 240)
   ;; TODO look into why the backend selection algorithm isn't working
-  (dashboard-projects-backend 'projectile)
-  (dashboard-projects-switch-function 'projectile-switch-project-by-name)
+  (dashboard-projects-backend 'project-el)
+  (dashboard-projects-switch-function 'project-switch-project)
   (dashboard-startup-banner (cons "~/.config/emacs/splash/emacs-logo.png" "~/.config/emacs/splash/emacs-logo.txt"))
   :config (dashboard-setup-startup-hook))
+
+(use-package-desktop! xref-project-history
+  :straight (xref-project-history
+	     :type git
+	     :host codeberg
+	     :repo "imarko/xref-project-history")
+  :custom
+  (xref-history-storage #'xref-project-history))
 
 (use-package-desktop! doom-modeline
   :straight t
