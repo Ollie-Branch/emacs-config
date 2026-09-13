@@ -199,6 +199,8 @@ parent directory created."
   (vc-follow-link t)
   (mouse-drag-mode-line t)
   (cursor-type 'bar)
+  ;; Too easy to fat-finger the exit keybind so we should confirm exit
+  (confirm-kill-emacs 'yes-or-no-p)
   (bookmark-file              (my/cache--path 'bookmark-file))
   (ielm-history-file-name     (my/cache--path 'ielm-history-file-name))
   (project-list-file          (my/cache--path 'project-list-file))
@@ -378,6 +380,18 @@ parent directory created."
   (speedbar-prefer-window t)
   (speedbar-use-images nil))
 
+(use-package-builtin! prog-mode
+  :init
+  (add-to-list 'display-buffer-alist
+	       '((derived-mode . prog-mode)
+		(display-buffer-in-tab)
+		(tab-name . "Programming")))
+  :hook
+  (prog-mode . (lambda ()
+		 (progn
+		   (setq fast-but-imprecise-scrolling t
+			 redisplay-skip-fontification-on-input t)))))
+
 (use-package-builtin! display-line-numbers
   :hook
   (prog-mode . display-line-numbers-mode))
@@ -385,13 +399,6 @@ parent directory created."
 (use-package-builtin! display-fill-column-indicator
   :hook
   (prog-mode . display-fill-column-indicator-mode))
-
-(use-package-builtin! prog-mode
-  :init
-  (add-to-list 'display-buffer-alist
-	       '((derived-mode . prog-mode)
-		(display-buffer-in-tab)
-		(tab-name . "Programming"))))
 
 ;; Inspired by: 
 ;; [[https://www.masteringemacs.org/article/how-to-get-started-tree-sitter]]
@@ -481,7 +488,15 @@ parent directory created."
 (use-package-builtin! tab-bar
   :custom
   (tab-bar-history-mode t)
-  :bind (("C-x t s" . "tab-bar-switch-to-tab")))
+  (tab-bar-new-tab-choice "*scratch*")
+  :bind (("C-x t RET" . "tab-bar-select-tab-by-name")))
+
+(use-package-builtin! mhtml-mode
+  :init
+  (add-to-list 'display-buffer-alist
+	       '((derived-mode . mhtml-mode)
+		 (display-buffer-in-tab)
+		 (tab-name . "Markup"))))
 
 (use-package-ensure! modus-themes
   :custom
@@ -541,6 +556,15 @@ parent directory created."
   :config
   (auto-dark-mode))
 
+(use-package-desktop! avy
+  :straight t
+  :bind
+  ("M-g c" . avy-goto-char)
+  ("M-g v" . avy-goto-char-2)
+  ("M-g l" . avy-goto-line)
+  ("M-g w" . avy-goto-word-1)
+  ("M-g q" . avy-goto-word-0))
+
 ;; install new packages and config them
 (use-package-ensure! no-littering
   :demand t)
@@ -578,8 +602,8 @@ parent directory created."
 ;; context windows with keyboard shortcuts
 (use-package-ensure! embark
   :bind
-  (("C-c e" . embark-act)         ;; pick some comfortable binding
-   ("C-c d" . embark-dwim)        ;; good alternative: m-.
+  (("C-'" . embark-act)         ;; pick some comfortable binding
+   ("C-;" . embark-dwim)        ;; good alternative: m-.
    ("C-h b" . embark-bindings)  ;; alternative for `describe-bindings'
    :map embark-symbol-map
    ("h" . helpful-symbol)
@@ -893,6 +917,13 @@ parent directory created."
 (use-package-ensure! markdown-mode
   :mode ("README\\.md\\'" . gfm-mode)
   :custom (markdown-command "multimarkdown")
+  :init
+  (dolist (markdown-modes
+	   '((markdown-mode) (gfm-mode)))
+    (add-to-list 'display-buffer-alist
+		 '((derived-mode . markdown-modes)
+		   (display-buffer-in-tab)
+		   (tab-name . "Markup"))))
   :bind (:map markdown-mode-map
               ("C-c C-e" . markdown-do)))
 

@@ -8,6 +8,7 @@ straight/
 auto-save-list/
 \#init.el\#
 projects/
+cache/
 projects
 backups/
 transient/
