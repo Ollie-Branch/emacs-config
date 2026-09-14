@@ -392,6 +392,10 @@ parent directory created."
 		   (setq fast-but-imprecise-scrolling t
 			 redisplay-skip-fontification-on-input t)))))
 
+(use-package-builtin! project
+  :custom
+  (project-vc-extra-root-markers '(".projectile"  ".git")))
+
 (use-package-builtin! display-line-numbers
   :hook
   (prog-mode . display-line-numbers-mode))
@@ -856,6 +860,14 @@ parent directory created."
   :config
   (spacious-padding-mode 1))
 
+(use-package-desktop! xref-project-history
+  :straight (xref-project-history
+	     :type git
+	     :host codeberg
+	     :repo "imarko/xref-project-history")
+  :custom
+  (xref-history-storage #'xref-project-history))
+
 (use-package-ensure! dashboard
   :init
   (setq initial-buffer-choice 'dashboard-open)
@@ -880,13 +892,6 @@ parent directory created."
   (dashboard-startup-banner (cons "~/.config/emacs/splash/emacs-logo.png" "~/.config/emacs/splash/emacs-logo.txt"))
   :config (dashboard-setup-startup-hook))
 
-(use-package-desktop! xref-project-history
-  :straight (xref-project-history
-	     :type git
-	     :host codeberg
-	     :repo "imarko/xref-project-history")
-  :custom
-  (xref-history-storage #'xref-project-history))
 
 (use-package-desktop! doom-modeline
   :straight t
