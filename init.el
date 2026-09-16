@@ -99,6 +99,15 @@ emacs still tries to pull the packages in even with it."
     (insert-file-contents filepath)
     (buffer-string)))
 
+;; This function is a desperate attempt to get a non-modal version of
+;; vim's "vi(" normal mode command
+(defun my/mark-forward-pair (first-char-in-pair)
+  (interactive "cFirst Character of Pair: ")
+  (progn
+    (search-forward (make-string 1 first-char-in-pair))
+    (backward-char)
+    (mark-sexp)))
+
 ;; code taken from:
 ;; [[https://rahuljuliato.com/posts/emacs-cache-paths]]
 (defcustom my/cache-directory
@@ -252,8 +261,7 @@ parent directory created."
 		(display-buffer-in-tab)
 		(tab-name . "Messages")))
   (if (not (eq system-type 'android))
-      (progn
-	(setq evil-want-keybinding nil)
+      (progn       
 	(setq scroll-conservatively 101	    	    
 	      use-dialog-box nil)
 	(tool-bar-mode -1)
@@ -278,7 +286,8 @@ parent directory created."
    ("C-c w h" . windmove-left)
    ("C-h k"   . describe-keymap)
    ("C-="     . text-scale-increase)
-   ("C--"     . text-scale-decrease)))
+   ("C--"     . text-scale-decrease)
+   ("M-g p"   . my/mark-forward-pair)))
 
 ;; config of pre-installed emacs packages
 (use-package-builtin! org
@@ -343,10 +352,6 @@ parent directory created."
 	       '("\\*Agenda Commands\\*"
 		 (display-buffer-in-side-window)
 		 (side . bottom)))
-  (add-to-list 'display-buffer-alist
-	       '((derived-mode . org-mode)
-		(display-buffer-in-tab)
-		(tab-name . "Org")))
   :bind (("C-c a" . org-agenda)
 	 ("C-c c" . org-capture)))
 
@@ -365,11 +370,6 @@ parent directory created."
   :custom
   (dired-auto-revert-buffer t)
   (dired-mouse-drag-files t)
-  :config
-  (add-to-list 'display-buffer-alist
-	       '((derived-mode . dired-mode)
-		 (display-buffer-in-tab)
-		 (tab-name . "Files")))
   :hook
   (dired-mode . dired-hide-details-mode))
 
@@ -381,11 +381,6 @@ parent directory created."
   (speedbar-use-images nil))
 
 (use-package-builtin! prog-mode
-  :init
-  (add-to-list 'display-buffer-alist
-	       '((derived-mode . prog-mode)
-		(display-buffer-in-tab)
-		(tab-name . "Programming")))
   :hook
   (prog-mode . (lambda ()
 		 (progn
@@ -494,13 +489,6 @@ parent directory created."
   (tab-bar-history-mode t)
   (tab-bar-new-tab-choice "*scratch*")
   :bind (("C-x t RET" . "tab-bar-select-tab-by-name")))
-
-(use-package-builtin! mhtml-mode
-  :init
-  (add-to-list 'display-buffer-alist
-	       '((derived-mode . mhtml-mode)
-		 (display-buffer-in-tab)
-		 (tab-name . "Markup"))))
 
 (use-package-ensure! modus-themes
   :custom
@@ -924,13 +912,10 @@ parent directory created."
   :custom (markdown-command "multimarkdown")
   :init
   (dolist (markdown-modes
-	   '((markdown-mode) (gfm-mode)))
-    (add-to-list 'display-buffer-alist
-		 '((derived-mode . markdown-modes)
-		   (display-buffer-in-tab)
-		   (tab-name . "Markup"))))
-  :bind (:map markdown-mode-map
-              ("C-c C-e" . markdown-do)))
+	   '((markdown-mode) (gfm-mode))))
+    :bind
+    (:map markdown-mode-map
+          ("C-c C-e" . markdown-do)))
 
 (use-package-desktop! magit
   :straight t
@@ -948,6 +933,12 @@ parent directory created."
   :straight t
   :magic ("%PDF" . pdf-view-mode)
   :config (pdf-tools-install :no-query))
+
+(use-package-desktop! docx-view
+  :straight (docx-view
+	     :type git
+	     :host github
+	     :repo "nick-maderight/docx-view"))
 
 (use-package-desktop! dap-mode
   :straight t
@@ -971,4 +962,3 @@ parent directory created."
 (when (not (eq system-type 'android))
   (load (concat (file-name-directory user-init-file)
 		"config-private.el")))
-(put 'dired-find-alternate-file 'disabled nil)
